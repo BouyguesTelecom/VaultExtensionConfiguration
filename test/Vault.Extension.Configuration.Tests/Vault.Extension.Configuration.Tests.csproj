@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Library\Library.csproj" />
+    <ProjectReference Include="..\..\src\Vault.Extension.Configuration\Vault.Extension.Configuration.csproj" />
   </ItemGroup>
 
   <ItemGroup>
