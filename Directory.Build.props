@@ -32,10 +32,10 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)strongname.snk</AssemblyOriginatorKeyFile>
 
-    <!-- <PackageProjectUrl>https://github.com/ORG/REPO</PackageProjectUrl> -->
-    <Company>COMPANY-PLACEHOLDER</Company>
-    <Authors>COMPANY-PLACEHOLDER</Authors>
-    <Copyright>© COMPANY-PLACEHOLDER. All rights reserved.</Copyright>
+    <PackageProjectUrl>https://github.com/BouyguesTelecom/VaultExtensionConfiguration</PackageProjectUrl>
+    <Company>Bouygues Telecom</Company>
+    <Authors>Thomas GICQUEL</Authors>
+    <Copyright>© Bouygues Telecom. All rights reserved.</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>

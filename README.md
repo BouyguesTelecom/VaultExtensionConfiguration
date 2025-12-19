@@ -1,12 +1,11 @@
-# Your Library
+# Vault.Extension.Configuration
 
-***An awesome template for your awesome library***
+***A configuration extension for Microsoft.Extensions.Configuration that integrates with HashiCorp Vault using VaultSharp***
 
-![NuGet package](https://img.shields.io/badge/nuget-your--package--here-yellow.svg)
+![NuGet package](https://img.shields.io/nuget/v/Vault.Extension.Configuration.svg)
 
-[![Azure Pipelines status](https://dev.azure.com/andrewarnott/OSS/_apis/build/status/AArnott.Library.Template?branchName=main)](https://dev.azure.com/andrewarnott/OSS/_build/latest?definitionId=29&branchName=main)
-![GitHub Actions status](https://github.com/aarnott/Library.Template/workflows/CI/badge.svg)
-[![codecov](https://codecov.io/gh/aarnott/library.template/branch/main/graph/badge.svg)](https://codecov.io/gh/aarnott/library.template)
+[![Build Status](https://github.com/BouyguesTelecom/VaultExtensionConfiguration/actions/workflows/build.yml/badge.svg)](https://github.com/BouyguesTelecom/VaultExtensionConfiguration/actions)
+[![codecov](https://codecov.io/gh/BouyguesTelecom/VaultExtensionConfiguration/branch/main/graph/badge.svg)](https://codecov.io/gh/BouyguesTelecom/VaultExtensionConfiguration)
 
 ## Features
 

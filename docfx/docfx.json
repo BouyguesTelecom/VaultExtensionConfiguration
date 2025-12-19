@@ -1,48 +1,48 @@
 {
-	"metadata": [
-		{
-			"src": [
-				{
-					"src": "../src",
-					"files": [
-						"**/*.csproj"
-					]
-				}
-			],
-			"dest": "api"
-		}
-	],
-	"build": {
-		"content": [
-			{
-				"files": [
-					"**/*.{md,yml}"
-				],
-				"exclude": [
-					"_site/**"
-				]
-			}
-		],
-		"resource": [
-			{
-				"files": [
-					"images/**"
-				]
-			}
-		],
-		"xref": [
-			"https://learn.microsoft.com/en-us/dotnet/.xrefmap.json"
-		],
-		"output": "_site",
-		"template": [
-			"default",
-			"modern"
-		],
-		"globalMetadata": {
-			"_appName": "Vault.Extension.Configuration",
-			"_appTitle": "Vault.Extension.Configuration",
-			"_enableSearch": true,
-			"pdf": false
-		}
-	}
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "../src",
+          "files": [
+            "**/*.csproj"
+          ]
+        }
+      ],
+      "dest": "api"
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": [
+          "**/*.{md,yml}"
+        ],
+        "exclude": [
+          "_site/**"
+        ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [
+          "images/**"
+        ]
+      }
+    ],
+    "xref": [
+      "https://learn.microsoft.com/en-us/dotnet/.xrefmap.json"
+    ],
+    "output": "_site",
+    "template": [
+      "default",
+      "modern"
+    ],
+    "globalMetadata": {
+      "_appName": "Vault.Extension.Configuration",
+      "_appTitle": "Vault.Extension.Configuration",
+      "_enableSearch": true,
+      "pdf": false
+    }
+  }
 }
