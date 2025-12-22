@@ -1,3 +1,6 @@
+// Copyright (c) Bouygues Telecom. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using FluentAssertions;
 using FluentValidation.TestHelper;
 using Vault.Options;
@@ -11,11 +14,11 @@ namespace Vault.Tests.Validators;
 /// </summary>
 public class VaultLocalConfigurationValidatorTests
 {
-    private readonly VaultLocalConfigurationValidator _validator;
+    private readonly VaultLocalConfigurationValidator validator;
 
     public VaultLocalConfigurationValidatorTests()
     {
-        _validator = new VaultLocalConfigurationValidator();
+        this.validator = new VaultLocalConfigurationValidator();
     }
 
     [Fact]
@@ -26,11 +29,11 @@ public class VaultLocalConfigurationValidatorTests
         {
             VaultUrl = "https://vault.example.com",
             MountPoint = "kv",
-            TokenFilePath = "%USERPROFILE%\\.vault-token"
+            TokenFilePath = "%USERPROFILE%\\.vault-token",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultLocalConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -44,11 +47,11 @@ public class VaultLocalConfigurationValidatorTests
         {
             VaultUrl = "https://vault.example.com",
             MountPoint = "kv",
-            TokenFilePath = string.Empty
+            TokenFilePath = string.Empty,
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultLocalConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -67,11 +70,11 @@ public class VaultLocalConfigurationValidatorTests
         {
             VaultUrl = "https://vault.example.com",
             MountPoint = "kv",
-            TokenFilePath = tokenFilePath
+            TokenFilePath = tokenFilePath,
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultLocalConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -85,11 +88,11 @@ public class VaultLocalConfigurationValidatorTests
         {
             VaultUrl = string.Empty,
             MountPoint = string.Empty,
-            TokenFilePath = "%USERPROFILE%\\.vault-token"
+            TokenFilePath = "%USERPROFILE%\\.vault-token",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultLocalConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.VaultUrl);
@@ -104,11 +107,11 @@ public class VaultLocalConfigurationValidatorTests
         {
             VaultUrl = string.Empty,
             MountPoint = string.Empty,
-            TokenFilePath = string.Empty
+            TokenFilePath = string.Empty,
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultLocalConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.VaultUrl);
@@ -125,11 +128,11 @@ public class VaultLocalConfigurationValidatorTests
             VaultUrl = "https://vault.example.com",
             MountPoint = "kv",
             TokenFilePath = "%USERPROFILE%\\.vault-token",
-            IgnoreSslErrors = true
+            IgnoreSslErrors = true,
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultLocalConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -144,11 +147,11 @@ public class VaultLocalConfigurationValidatorTests
             VaultUrl = "https://vault.example.com",
             MountPoint = "kv",
             TokenFilePath = "%USERPROFILE%\\.vault-token",
-            IgnoreSslErrors = false
+            IgnoreSslErrors = false,
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultLocalConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();

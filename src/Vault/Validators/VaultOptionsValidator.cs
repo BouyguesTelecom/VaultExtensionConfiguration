@@ -1,13 +1,18 @@
+ï»¿using FluentValidation;
 using Vault.Options;
-using FluentValidation;
 
 namespace Vault.Validators;
 
 /// <summary>
-/// Validateur pour VaultOptions.
-/// Vérifie la cohérence de la configuration selon le type d'authentification.
+/// Provides validation logic for <see cref="VaultOptions"/> instances to ensure that configuration and authentication
+/// settings are valid before use.
 /// </summary>
-public class VaultOptionsValidator : AbstractValidator<VaultOptions>
+/// <remarks>This validator enforces required fields and checks that the configuration type matches the selected
+/// authentication method. It should be used to validate <see cref="VaultOptions"/> objects prior to initializing
+/// Vault-related services. Validation failures will provide descriptive error messages for each invalid
+/// property.</remarks>
+public class VaultOptionsValidator
+    : AbstractValidator<VaultOptions>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="VaultOptionsValidator"/> class.

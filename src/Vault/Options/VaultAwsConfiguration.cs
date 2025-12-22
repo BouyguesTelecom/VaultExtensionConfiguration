@@ -4,7 +4,8 @@ namespace Vault.Options;
 /// Configuration pour l'authentification automatique via AWS IAM.
 /// Utilise les credentials AWS disponibles (variables d'environnement, instance profile EC2, ECS task role, etc.).
 /// </summary>
-public class VaultAwsConfiguration : VaultDefaultConfiguration
+public class VaultAwsConfiguration
+    : VaultDefaultConfiguration
 {
     /// <summary>
     /// Nom du rôle Vault pour l'authentification AWS IAM (optionnel).

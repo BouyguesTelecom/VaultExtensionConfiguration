@@ -1,3 +1,6 @@
+// Copyright (c) Bouygues Telecom. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using FluentAssertions;
 using FluentValidation.TestHelper;
 using NSubstitute;
@@ -13,14 +16,12 @@ namespace Vault.Tests.Validators;
 /// </summary>
 public class VaultOptionsValidatorTests
 {
-    private readonly VaultOptionsValidator _validator;
+    private readonly VaultOptionsValidator validator;
 
     public VaultOptionsValidatorTests()
     {
-        _validator = new VaultOptionsValidator();
+        this.validator = new VaultOptionsValidator();
     }
-
-    #region Tests AuthenticationType
 
     [Fact]
     public void Should_Have_Error_When_AuthenticationType_Is_None()
@@ -33,11 +34,11 @@ public class VaultOptionsValidatorTests
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv"
-            }
+            },
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.AuthenticationType)
@@ -51,20 +52,16 @@ public class VaultOptionsValidatorTests
         var options = new VaultOptions
         {
             AuthenticationType = VaultAuthenticationType.Local,
-            Configuration = null
+            Configuration = null,
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Configuration)
             .WithErrorMessage(VaultOptionsResources.Vault_Configuration_Undefined);
     }
-
-    #endregion
-
-    #region Tests Local Authentication
 
     [Fact]
     public void Should_Have_Error_When_Local_Auth_With_Wrong_Configuration_Type()
@@ -78,11 +75,11 @@ public class VaultOptionsValidatorTests
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv",
                 Environment = "thomas"
-            }
+            },
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Configuration)
@@ -101,11 +98,11 @@ public class VaultOptionsValidatorTests
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv",
                 TokenFilePath = "%USERPROFILE%\\.vault-token"
-            }
+            },
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -123,19 +120,15 @@ public class VaultOptionsValidatorTests
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv",
                 TokenFilePath = string.Empty
-            }
+            },
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
-
-    #endregion
-
-    #region Tests AWS_IAM Authentication
 
     [Fact]
     public void Should_Have_Error_When_AWS_Auth_With_Wrong_Configuration_Type()
@@ -148,11 +141,11 @@ public class VaultOptionsValidatorTests
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv"
-            }
+            },
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Configuration)
@@ -173,11 +166,11 @@ public class VaultOptionsValidatorTests
                 Environment = "thomas",
                 AwsIamRoleName = "my-custom-role",
                 AwsAuthMountPoint = "aws"
-            }
+            },
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -196,11 +189,11 @@ public class VaultOptionsValidatorTests
                 MountPoint = "HELLOWORLD-FORMATION",
                 Environment = "thomas",
                 AwsAuthMountPoint = "aws"
-            }
+            },
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -219,19 +212,15 @@ public class VaultOptionsValidatorTests
                 MountPoint = "HELLOWORLD-FORMATION",
                 Environment = string.Empty, // Requis
                 AwsAuthMountPoint = "aws"
-            }
+            },
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.Errors.Should().Contain(e => e.ErrorMessage.Contains("Environment"));
     }
-
-    #endregion
-
-    #region Tests Custom Authentication
 
     [Fact]
     public void Should_Have_Error_When_Custom_Auth_Without_CustomAuthMethodInfo()
@@ -243,13 +232,13 @@ public class VaultOptionsValidatorTests
             Configuration = new VaultDefaultConfiguration
             {
                 VaultUrl = "https://vault.example.com",
-                MountPoint = "kv"
+                MountPoint = "kv",
             },
-            CustomAuthMethodInfo = null
+            CustomAuthMethodInfo = null,
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.CustomAuthMethodInfo)
@@ -260,7 +249,7 @@ public class VaultOptionsValidatorTests
     public void Should_Have_Error_When_Custom_Auth_With_Wrong_Configuration_Type()
     {
         // Arrange
-        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
 
         var options = new VaultOptions
         {
@@ -268,13 +257,13 @@ public class VaultOptionsValidatorTests
             Configuration = new VaultLocalConfiguration // Doit être VaultDefaultConfiguration
             {
                 VaultUrl = "https://vault.example.com",
-                MountPoint = "kv"
+                MountPoint = "kv",
             },
-            CustomAuthMethodInfo = mockAuthMethod
+            CustomAuthMethodInfo = mockAuthMethod,
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Configuration)
@@ -285,7 +274,7 @@ public class VaultOptionsValidatorTests
     public void Should_Not_Have_Error_When_Custom_Auth_Is_Valid()
     {
         // Arrange
-        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
 
         var options = new VaultOptions
         {
@@ -293,13 +282,13 @@ public class VaultOptionsValidatorTests
             Configuration = new VaultDefaultConfiguration
             {
                 VaultUrl = "https://vault.example.com",
-                MountPoint = "kv"
+                MountPoint = "kv",
             },
-            CustomAuthMethodInfo = mockAuthMethod
+            CustomAuthMethodInfo = mockAuthMethod,
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -309,7 +298,7 @@ public class VaultOptionsValidatorTests
     public void Should_Have_Error_When_Custom_Auth_With_AwsConfiguration()
     {
         // Arrange
-        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
 
         var options = new VaultOptions
         {
@@ -318,21 +307,17 @@ public class VaultOptionsValidatorTests
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv",
-                Environment = "thomas"
+                Environment = "thomas",
             },
-            CustomAuthMethodInfo = mockAuthMethod
+            CustomAuthMethodInfo = mockAuthMethod,
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Configuration);
     }
-
-    #endregion
-
-    #region Tests scénarios d'intégration
 
     [Fact]
     public void Should_Validate_Complete_Local_Configuration()
@@ -347,11 +332,11 @@ public class VaultOptionsValidatorTests
                 MountPoint = "HELLOWORLD-FORMATION",
                 TokenFilePath = "C:\\Users\\thomas\\.vault-token",
                 IgnoreSslErrors = false
-            }
+            },
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -371,11 +356,11 @@ public class VaultOptionsValidatorTests
                 Environment = "production",
                 AwsAuthMountPoint = "aws",
                 IgnoreSslErrors = false
-            }
+            },
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -393,16 +378,14 @@ public class VaultOptionsValidatorTests
                 VaultUrl = string.Empty,
                 MountPoint = string.Empty,
                 TokenFilePath = string.Empty
-            }
+            },
         };
 
         // Act
-        var result = _validator.TestValidate(options);
+        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
 
         // Assert
         result.Errors.Should().HaveCountGreaterThan(0);
         result.IsValid.Should().BeFalse();
     }
-
-    #endregion
 }

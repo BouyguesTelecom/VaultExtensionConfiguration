@@ -1,3 +1,6 @@
+// Copyright (c) Bouygues Telecom. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using FluentAssertions;
 using FluentValidation.TestHelper;
 using Vault.Options;
@@ -11,11 +14,11 @@ namespace Vault.Tests.Validators;
 /// </summary>
 public class VaultDefaultConfigurationValidatorTests
 {
-    private readonly VaultDefaultConfigurationValidator _validator;
+    private readonly VaultDefaultConfigurationValidator validator;
 
     public VaultDefaultConfigurationValidatorTests()
     {
-        _validator = new VaultDefaultConfigurationValidator();
+        this.validator = new VaultDefaultConfigurationValidator();
     }
 
     [Fact]
@@ -25,11 +28,11 @@ public class VaultDefaultConfigurationValidatorTests
         var config = new VaultDefaultConfiguration
         {
             VaultUrl = string.Empty,
-            MountPoint = "kv"
+            MountPoint = "kv",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultDefaultConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.VaultUrl)
@@ -43,11 +46,11 @@ public class VaultDefaultConfigurationValidatorTests
         var config = new VaultDefaultConfiguration
         {
             VaultUrl = null!,
-            MountPoint = "kv"
+            MountPoint = "kv",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultDefaultConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.VaultUrl);
@@ -60,11 +63,11 @@ public class VaultDefaultConfigurationValidatorTests
         var config = new VaultDefaultConfiguration
         {
             VaultUrl = "https://vault.example.com",
-            MountPoint = string.Empty
+            MountPoint = string.Empty,
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultDefaultConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.MountPoint)
@@ -78,11 +81,11 @@ public class VaultDefaultConfigurationValidatorTests
         var config = new VaultDefaultConfiguration
         {
             VaultUrl = "https://vault.example.com",
-            MountPoint = null!
+            MountPoint = null!,
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultDefaultConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.MountPoint);
@@ -95,11 +98,11 @@ public class VaultDefaultConfigurationValidatorTests
         var config = new VaultDefaultConfiguration
         {
             VaultUrl = "https://vault.example.com",
-            MountPoint = "kv"
+            MountPoint = "kv",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultDefaultConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -115,11 +118,11 @@ public class VaultDefaultConfigurationValidatorTests
         var config = new VaultDefaultConfiguration
         {
             VaultUrl = vaultUrl,
-            MountPoint = mountPoint
+            MountPoint = mountPoint,
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultDefaultConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -132,11 +135,11 @@ public class VaultDefaultConfigurationValidatorTests
         var config = new VaultDefaultConfiguration
         {
             VaultUrl = string.Empty,
-            MountPoint = string.Empty
+            MountPoint = string.Empty,
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultDefaultConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.VaultUrl);

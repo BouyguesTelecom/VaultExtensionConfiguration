@@ -1,8 +1,8 @@
-using Vault.Abstractions;
-using Vault.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Vault.Abstractions;
+using Vault.Internal;
 
 namespace Vault;
 

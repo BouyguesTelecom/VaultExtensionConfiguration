@@ -3,7 +3,8 @@ namespace Vault.Options;
 /// <summary>
 /// Configuration pour l'authentification locale via token.
 /// </summary>
-public class VaultLocalConfiguration : VaultDefaultConfiguration
+public class VaultLocalConfiguration
+    : VaultDefaultConfiguration
 {
     /// <summary>
     /// Chemin du fichier token.

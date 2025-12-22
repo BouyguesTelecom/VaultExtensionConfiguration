@@ -1,10 +1,10 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Vault.Abstractions;
 using Vault.Exceptions;
 using Vault.Options;
 using Vault.Services;
 using Vault.Validators;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace Vault;
 

@@ -1,3 +1,6 @@
+// Copyright (c) Bouygues Telecom. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -14,8 +17,6 @@ namespace Vault.Tests.Integration;
 /// </summary>
 public class VaultServiceCollectionExtensionsTests
 {
-    #region Tests Local Authentication
-
     [Fact]
     public void AddVaultService_Should_Register_Services_With_Valid_Local_Configuration()
     {
@@ -30,13 +31,13 @@ public class VaultServiceCollectionExtensionsTests
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv",
-                TokenFilePath = "%USERPROFILE%\\.vault-token"
+                TokenFilePath = "%USERPROFILE%\\.vault-token",
             };
         });
 
         // Assert
-        var serviceProvider = services.BuildServiceProvider();
-        var vaultOptions = serviceProvider.GetService<VaultOptions>();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+        VaultOptions? vaultOptions = serviceProvider.GetService<VaultOptions>();
 
         vaultOptions.Should().NotBeNull();
         vaultOptions!.AuthenticationType.Should().Be(VaultAuthenticationType.Local);
@@ -57,13 +58,13 @@ public class VaultServiceCollectionExtensionsTests
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv",
-                TokenFilePath = string.Empty // Pas requis
+                TokenFilePath = string.Empty, // Pas requis
             };
         });
 
         // Assert
-        var serviceProvider = services.BuildServiceProvider();
-        var vaultOptions = serviceProvider.GetService<VaultOptions>();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+        VaultOptions? vaultOptions = serviceProvider.GetService<VaultOptions>();
 
         vaultOptions.Should().NotBeNull();
         vaultOptions!.AuthenticationType.Should().Be(VaultAuthenticationType.Local);
@@ -83,7 +84,7 @@ public class VaultServiceCollectionExtensionsTests
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv",
-                Environment = "thomas"
+                Environment = "thomas",
             };
         });
 
@@ -91,10 +92,6 @@ public class VaultServiceCollectionExtensionsTests
         act.Should().Throw<VaultConfigurationException>()
             .WithMessage("*VaultLocalConfiguration*");
     }
-
-    #endregion
-
-    #region Tests AWS_IAM Authentication
 
     [Fact]
     public void AddVaultService_Should_Register_Services_With_Valid_AWS_Configuration_Explicit_Role()
@@ -112,13 +109,13 @@ public class VaultServiceCollectionExtensionsTests
                 MountPoint = "kv",
                 Environment = "thomas",
                 AwsIamRoleName = "my-custom-role",
-                AwsAuthMountPoint = "aws"
+                AwsAuthMountPoint = "aws",
             };
         });
 
         // Assert
-        var serviceProvider = services.BuildServiceProvider();
-        var vaultOptions = serviceProvider.GetService<VaultOptions>();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+        VaultOptions? vaultOptions = serviceProvider.GetService<VaultOptions>();
 
         vaultOptions.Should().NotBeNull();
         vaultOptions!.AuthenticationType.Should().Be(VaultAuthenticationType.AWS_IAM);
@@ -143,13 +140,13 @@ public class VaultServiceCollectionExtensionsTests
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "HELLOWORLD-FORMATION",
                 Environment = "thomas",
-                AwsAuthMountPoint = "aws"
+                AwsAuthMountPoint = "aws",
             };
         });
 
         // Assert
-        var serviceProvider = services.BuildServiceProvider();
-        var vaultOptions = serviceProvider.GetService<VaultOptions>();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+        VaultOptions? vaultOptions = serviceProvider.GetService<VaultOptions>();
 
         vaultOptions.Should().NotBeNull();
         vaultOptions!.AuthenticationType.Should().Be(VaultAuthenticationType.AWS_IAM);
@@ -174,7 +171,7 @@ public class VaultServiceCollectionExtensionsTests
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "HELLOWORLD-FORMATION",
                 Environment = string.Empty, // Requis
-                AwsAuthMountPoint = "aws"
+                AwsAuthMountPoint = "aws",
             };
         });
 
@@ -196,7 +193,7 @@ public class VaultServiceCollectionExtensionsTests
             options.Configuration = new VaultLocalConfiguration // Wrong type
             {
                 VaultUrl = "https://vault.example.com",
-                MountPoint = "kv"
+                MountPoint = "kv",
             };
         });
 
@@ -205,16 +202,12 @@ public class VaultServiceCollectionExtensionsTests
             .WithMessage("*VaultAwsConfiguration*");
     }
 
-    #endregion
-
-    #region Tests Custom Authentication
-
     [Fact]
     public void AddVaultService_Should_Register_Services_With_Valid_Custom_Configuration()
     {
         // Arrange
         var services = new ServiceCollection();
-        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
 
         // Act
         services.AddVaultService(options =>
@@ -223,14 +216,14 @@ public class VaultServiceCollectionExtensionsTests
             options.Configuration = new VaultDefaultConfiguration
             {
                 VaultUrl = "https://vault.example.com",
-                MountPoint = "kv"
+                MountPoint = "kv",
             };
             options.CustomAuthMethodInfo = mockAuthMethod;
         });
 
         // Assert
-        var serviceProvider = services.BuildServiceProvider();
-        var vaultOptions = serviceProvider.GetService<VaultOptions>();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+        VaultOptions? vaultOptions = serviceProvider.GetService<VaultOptions>();
 
         vaultOptions.Should().NotBeNull();
         vaultOptions!.AuthenticationType.Should().Be(VaultAuthenticationType.Custom);
@@ -251,7 +244,7 @@ public class VaultServiceCollectionExtensionsTests
             options.Configuration = new VaultDefaultConfiguration
             {
                 VaultUrl = "https://vault.example.com",
-                MountPoint = "kv"
+                MountPoint = "kv",
             };
             options.CustomAuthMethodInfo = null; // Missing
         });
@@ -266,7 +259,7 @@ public class VaultServiceCollectionExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
-        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
 
         // Act
         Action act = () => services.AddVaultService(options =>
@@ -276,7 +269,7 @@ public class VaultServiceCollectionExtensionsTests
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv",
-                Environment = "thomas"
+                Environment = "thomas",
             };
             options.CustomAuthMethodInfo = mockAuthMethod;
         });
@@ -285,10 +278,6 @@ public class VaultServiceCollectionExtensionsTests
         act.Should().Throw<VaultConfigurationException>()
             .WithMessage("*VaultDefaultConfiguration*");
     }
-
-    #endregion
-
-    #region Tests Common Validations
 
     [Fact]
     public void AddVaultService_Should_Throw_When_AuthenticationType_Is_None()
@@ -303,7 +292,7 @@ public class VaultServiceCollectionExtensionsTests
             options.Configuration = new VaultDefaultConfiguration
             {
                 VaultUrl = "https://vault.example.com",
-                MountPoint = "kv"
+                MountPoint = "kv",
             };
         });
 
@@ -344,7 +333,7 @@ public class VaultServiceCollectionExtensionsTests
             {
                 VaultUrl = string.Empty,
                 MountPoint = "kv",
-                TokenFilePath = "%USERPROFILE%\\.vault-token"
+                TokenFilePath = "%USERPROFILE%\\.vault-token",
             };
         });
 
@@ -367,7 +356,7 @@ public class VaultServiceCollectionExtensionsTests
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = string.Empty,
-                TokenFilePath = "%USERPROFILE%\\.vault-token"
+                TokenFilePath = "%USERPROFILE%\\.vault-token",
             };
         });
 
@@ -390,7 +379,7 @@ public class VaultServiceCollectionExtensionsTests
             {
                 VaultUrl = string.Empty,
                 MountPoint = string.Empty,
-                TokenFilePath = string.Empty
+                TokenFilePath = string.Empty,
             };
         });
 
@@ -398,12 +387,9 @@ public class VaultServiceCollectionExtensionsTests
         act.Should().Throw<VaultConfigurationException>()
             .Which.Message.Should().Contain("VaultUrl")
             .And.Contain("MountPoint");
+
         // TokenFilePath n'est plus validé
     }
-
-    #endregion
-
-    #region Tests Service Registration
 
     [Fact]
     public void AddVaultService_Should_Register_VaultOptions_As_Singleton()
@@ -419,14 +405,14 @@ public class VaultServiceCollectionExtensionsTests
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv",
-                TokenFilePath = "%USERPROFILE%\\.vault-token"
+                TokenFilePath = "%USERPROFILE%\\.vault-token",
             };
         });
 
         // Assert
-        var serviceProvider = services.BuildServiceProvider();
-        var instance1 = serviceProvider.GetService<VaultOptions>();
-        var instance2 = serviceProvider.GetService<VaultOptions>();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+        VaultOptions? instance1 = serviceProvider.GetService<VaultOptions>();
+        VaultOptions? instance2 = serviceProvider.GetService<VaultOptions>();
 
         instance1.Should().BeSameAs(instance2);
     }
@@ -438,20 +424,18 @@ public class VaultServiceCollectionExtensionsTests
         var services = new ServiceCollection();
 
         // Act
-        var result = services.AddVaultService(options =>
+        IServiceCollection result = services.AddVaultService(options =>
         {
             options.AuthenticationType = VaultAuthenticationType.Local;
             options.Configuration = new VaultLocalConfiguration
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv",
-                TokenFilePath = "%USERPROFILE%\\.vault-token"
+                TokenFilePath = "%USERPROFILE%\\.vault-token",
             };
         });
 
         // Assert
         result.Should().BeSameAs(services);
     }
-
-    #endregion
 }

@@ -1,13 +1,17 @@
+ï»¿using FluentValidation;
 using Vault.Options;
-using FluentValidation;
 
 namespace Vault.Validators;
 
 /// <summary>
-/// Validateur pour VaultDefaultConfiguration.
-/// Vérifie les propriétés communes à toutes les configurations Vault.
+/// Provides validation logic for instances of <see cref="VaultDefaultConfiguration"/> to ensure required configuration
+/// properties are set.
 /// </summary>
-public class VaultDefaultConfigurationValidator : AbstractValidator<VaultDefaultConfiguration>
+/// <remarks>This validator enforces that the <c>VaultUrl</c> and <c>MountPoint</c> properties of a <see
+/// cref="VaultDefaultConfiguration"/> are not empty. Use this class to validate configuration objects before using them
+/// in Vault-related operations.</remarks>
+public class VaultDefaultConfigurationValidator
+    : AbstractValidator<VaultDefaultConfiguration>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="VaultDefaultConfigurationValidator"/> class.

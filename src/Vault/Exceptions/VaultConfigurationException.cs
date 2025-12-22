@@ -3,7 +3,8 @@ namespace Vault.Exceptions;
 /// <summary>
 /// Exception levée lors d'une erreur de configuration de Vault.
 /// </summary>
-public class VaultConfigurationException : VaultException
+public class VaultConfigurationException
+    : VaultException
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="VaultConfigurationException"/> class.

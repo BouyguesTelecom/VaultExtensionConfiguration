@@ -1,13 +1,15 @@
+ï»¿using FluentValidation;
 using Vault.Options;
-using FluentValidation;
 
 namespace Vault.Validators;
 
 /// <summary>
-/// Validateur pour VaultLocalConfiguration.
-/// Vérifie la configuration spécifique à l'authentification locale par token.
+/// Provides validation logic for instances of the VaultLocalConfiguration class using predefined validation rules.
 /// </summary>
-public class VaultLocalConfigurationValidator : AbstractValidator<VaultLocalConfiguration>
+/// <remarks>This validator includes the base validation rules defined in VaultDefaultConfigurationValidator. Use
+/// this class to ensure that VaultLocalConfiguration objects meet required criteria before use.</remarks>
+public class VaultLocalConfigurationValidator
+    : AbstractValidator<VaultLocalConfiguration>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="VaultLocalConfigurationValidator"/> class.

@@ -1,3 +1,6 @@
+// Copyright (c) Bouygues Telecom. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using FluentAssertions;
 using FluentValidation.TestHelper;
 using Vault.Options;
@@ -11,14 +14,12 @@ namespace Vault.Tests.Validators;
 /// </summary>
 public class VaultAwsConfigurationValidatorTests
 {
-    private readonly VaultAwsConfigurationValidator _validator;
+    private readonly VaultAwsConfigurationValidator validator;
 
     public VaultAwsConfigurationValidatorTests()
     {
-        _validator = new VaultAwsConfigurationValidator();
+        this.validator = new VaultAwsConfigurationValidator();
     }
-
-    #region Tests Environment (toujours requis)
 
     [Fact]
     public void Should_Have_Error_When_Environment_Is_Empty()
@@ -29,11 +30,11 @@ public class VaultAwsConfigurationValidatorTests
             VaultUrl = "https://vault.example.com",
             MountPoint = "kv",
             Environment = string.Empty,
-            AwsAuthMountPoint = "aws"
+            AwsAuthMountPoint = "aws",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultAwsConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Environment)
@@ -49,11 +50,11 @@ public class VaultAwsConfigurationValidatorTests
             VaultUrl = "https://vault.example.com",
             MountPoint = "kv",
             Environment = null!,
-            AwsAuthMountPoint = "aws"
+            AwsAuthMountPoint = "aws",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultAwsConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Environment);
@@ -68,19 +69,15 @@ public class VaultAwsConfigurationValidatorTests
             VaultUrl = "https://vault.example.com",
             MountPoint = "kv",
             Environment = "thomas",
-            AwsAuthMountPoint = "aws"
+            AwsAuthMountPoint = "aws",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultAwsConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
-
-    #endregion
-
-    #region Tests AwsIamRoleName (optionnel)
 
     [Fact]
     public void Should_Not_Have_Error_When_AwsIamRoleName_Is_Provided()
@@ -92,11 +89,11 @@ public class VaultAwsConfigurationValidatorTests
             MountPoint = "kv",
             Environment = "production",
             AwsIamRoleName = "my-custom-role",
-            AwsAuthMountPoint = "aws"
+            AwsAuthMountPoint = "aws",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultAwsConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -112,11 +109,11 @@ public class VaultAwsConfigurationValidatorTests
             MountPoint = "kv",
             Environment = "thomas",
             AwsIamRoleName = null,
-            AwsAuthMountPoint = "aws"
+            AwsAuthMountPoint = "aws",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultAwsConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -132,19 +129,15 @@ public class VaultAwsConfigurationValidatorTests
             MountPoint = "kv",
             Environment = "thomas",
             AwsIamRoleName = string.Empty,
-            AwsAuthMountPoint = "aws"
+            AwsAuthMountPoint = "aws",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultAwsConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
-
-    #endregion
-
-    #region Tests AwsAuthMountPoint (optionnel)
 
     [Fact]
     public void Should_Not_Have_Error_When_AwsAuthMountPoint_Is_Default()
@@ -155,11 +148,11 @@ public class VaultAwsConfigurationValidatorTests
             VaultUrl = "https://vault.example.com",
             MountPoint = "kv",
             Environment = "thomas",
-            AwsAuthMountPoint = "aws" // Valeur par défaut
+            AwsAuthMountPoint = "aws", // Valeur par défaut
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultAwsConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -174,19 +167,15 @@ public class VaultAwsConfigurationValidatorTests
             VaultUrl = "https://vault.example.com",
             MountPoint = "kv",
             Environment = "thomas",
-            AwsAuthMountPoint = "custom-aws-auth"
+            AwsAuthMountPoint = "custom-aws-auth",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultAwsConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
-
-    #endregion
-
-    #region Tests validations héritées
 
     [Fact]
     public void Should_Validate_Base_Configuration_Properties()
@@ -197,11 +186,11 @@ public class VaultAwsConfigurationValidatorTests
             VaultUrl = string.Empty,
             MountPoint = "kv",
             Environment = "thomas",
-            AwsAuthMountPoint = "aws"
+            AwsAuthMountPoint = "aws",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultAwsConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.VaultUrl);
@@ -216,11 +205,11 @@ public class VaultAwsConfigurationValidatorTests
             VaultUrl = string.Empty,
             MountPoint = string.Empty,
             Environment = string.Empty,
-            AwsAuthMountPoint = "aws"
+            AwsAuthMountPoint = "aws",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultAwsConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.VaultUrl);
@@ -228,10 +217,6 @@ public class VaultAwsConfigurationValidatorTests
         result.ShouldHaveValidationErrorFor(x => x.Environment);
         result.Errors.Should().HaveCount(3); // VaultUrl + MountPoint + Environment
     }
-
-    #endregion
-
-    #region Tests scénarios réels
 
     [Theory]
     [InlineData("production", "HELLOWORLD-FORMATION")]
@@ -245,11 +230,11 @@ public class VaultAwsConfigurationValidatorTests
             VaultUrl = "https://vault.example.com",
             MountPoint = mountPoint,
             Environment = environment,
-            AwsAuthMountPoint = "aws"
+            AwsAuthMountPoint = "aws",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultAwsConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -266,11 +251,11 @@ public class VaultAwsConfigurationValidatorTests
             AwsIamRoleName = "HELLOWORLD-FORMATION-prod-role",
             Environment = "production",
             AwsAuthMountPoint = "aws",
-            IgnoreSslErrors = false
+            IgnoreSslErrors = false,
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultAwsConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -284,15 +269,13 @@ public class VaultAwsConfigurationValidatorTests
         {
             VaultUrl = "https://vault.example.com",
             MountPoint = "kv",
-            Environment = "dev"
+            Environment = "dev",
         };
 
         // Act
-        var result = _validator.TestValidate(config);
+        TestValidationResult<VaultAwsConfiguration> result = this.validator.TestValidate(config);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
-
-    #endregion
 }

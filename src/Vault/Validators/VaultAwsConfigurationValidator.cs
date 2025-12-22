@@ -1,13 +1,17 @@
+ï»¿using FluentValidation;
 using Vault.Options;
-using FluentValidation;
 
 namespace Vault.Validators;
 
 /// <summary>
-/// Validateur pour VaultAwsConfiguration.
-/// Vérifie la configuration spécifique à l'authentification AWS IAM.
+/// Provides validation logic for <see cref="VaultAwsConfiguration"/> instances, ensuring required AWS Vault
+/// configuration properties are set correctly.
 /// </summary>
-public class VaultAwsConfigurationValidator : AbstractValidator<VaultAwsConfiguration>
+/// <remarks>This validator enforces that the <c>Environment</c> property is not empty and includes default
+/// validation rules from <see cref="VaultDefaultConfigurationValidator"/>. Use this class with validation frameworks
+/// such as FluentValidation to verify configuration objects before use.</remarks>
+public class VaultAwsConfigurationValidator
+    : AbstractValidator<VaultAwsConfiguration>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="VaultAwsConfigurationValidator"/> class.

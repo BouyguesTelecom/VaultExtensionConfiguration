@@ -1,17 +1,22 @@
+using Microsoft.Extensions.Logging;
 using Vault.Abstractions;
 using Vault.Exceptions;
 using Vault.Internal;
 using Vault.Options;
-using Microsoft.Extensions.Logging;
 using VaultSharp;
 using VaultSharp.V1.SecretsEngines;
 
 namespace Vault.Services;
 
 /// <summary>
-/// Implémentation du service Vault.
+/// Provides access to HashiCorp Vault secrets and environments using configured authentication and connection options.
 /// </summary>
-public class VaultService : IVaultService
+/// <remarks>VaultService manages the connection to a Vault server, handles authentication, and exposes methods to
+/// list environments and retrieve secrets. The service is intended for use in applications that require secure access
+/// to secrets stored in Vault. Thread safety is ensured for typical usage scenarios. For production environments,
+/// ensure SSL validation is enabled to maintain secure communication with the Vault server.</remarks>
+public class VaultService
+    : IVaultService
 {
     private readonly IVaultClient _vaultClient;
     private readonly VaultOptions _options;
