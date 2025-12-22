@@ -4,29 +4,29 @@ using VaultSharp.V1.AuthMethods;
 namespace Vault.Options;
 
 /// <summary>
-/// Options de configuration pour le service Vault.
-/// Permet de configurer différents types d'authentification (Local, AWS_IAM ou Custom).
+/// Configuration options for the Vault service.
+/// Allows configuring different authentication types (Local, AWS_IAM, or Custom).
 /// </summary>
 public class VaultOptions
 {
-    /// <summary>
-    /// Type d'authentification (Local, AWS_IAM ou Custom).
-    /// </summary>
-    public VaultAuthenticationType AuthenticationType { get; set; } = VaultAuthenticationType.Local;
+  /// <summary>
+  /// Gets or sets the authentication type (Local, AWS_IAM, or Custom).
+  /// </summary>
+  public VaultAuthenticationType AuthenticationType { get; set; } = VaultAuthenticationType.Local;
 
-    /// <summary>
-    /// Configuration pour l'accès à Vault.
-    /// - VaultLocalConfiguration si AuthenticationType = Local.
-    /// - VaultAwsConfiguration si AuthenticationType = AWS_IAM.
-    /// - VaultDefaultConfiguration si AuthenticationType = Custom.
-    /// </summary>
-    public VaultDefaultConfiguration? Configuration { get; set; } = new VaultLocalConfiguration();
+  /// <summary>
+  /// Gets or sets the configuration for Vault access.
+  /// Use VaultLocalConfiguration when AuthenticationType = Local.
+  /// Use VaultAwsConfiguration when AuthenticationType = AWS_IAM.
+  /// Use VaultDefaultConfiguration when AuthenticationType = Custom.
+  /// </summary>
+  public VaultDefaultConfiguration? Configuration { get; set; } = new VaultLocalConfiguration();
 
-    /// <summary>
-    /// Méthode d'authentification personnalisée.
-    /// Utilisé uniquement si AuthenticationType = Custom.
-    /// Permet de fournir une implémentation personnalisée de IAuthMethodInfo pour les méthodes
-    /// d'authentification non prises en charge nativement (AppRole, LDAP, UserPass, etc.).
-    /// </summary>
-    public IAuthMethodInfo? CustomAuthMethodInfo { get; set; }
+  /// <summary>
+  /// Gets or sets the custom authentication method.
+  /// Used only when AuthenticationType = Custom.
+  /// Allows providing a custom IAuthMethodInfo implementation for authentication methods
+  /// not natively supported (AppRole, LDAP, UserPass, etc.).
+  /// </summary>
+  public IAuthMethodInfo? CustomAuthMethodInfo { get; set; }
 }
