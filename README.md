@@ -5,6 +5,7 @@
 [![NuGet package](https://img.shields.io/nuget/v/Vault.Extension.Configuration.svg)](https://www.nuget.org/packages/Vault.Extension.Configuration)
 [![Build Status](https://github.com/BouyguesTelecom/VaultExtensionConfiguration/actions/workflows/build.yml/badge.svg)](https://github.com/BouyguesTelecom/VaultExtensionConfiguration/actions)
 [![codecov](https://codecov.io/gh/BouyguesTelecom/VaultExtensionConfiguration/branch/main/graph/badge.svg)](https://codecov.io/gh/BouyguesTelecom/VaultExtensionConfiguration)
+[![Documentation](https://img.shields.io/badge/docs-online-blue.svg)](https://bouyguestelecom.github.io/VaultExtensionConfiguration/docs/getting-started.html)
 
 ## Features
 
