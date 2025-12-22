@@ -155,9 +155,9 @@ try {
         exit 1
     }
 
-    # Create the tag
+    # Create the tag (lightweight tag for compatibility with release workflow)
     Write-Host "Creating tag '$tagName'..." -ForegroundColor Cyan
-    git tag $tagName -m "Release $semVer"
+    git tag $tagName
 
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to create tag"
