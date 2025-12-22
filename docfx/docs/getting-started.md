@@ -338,7 +338,6 @@ options.Configuration = new VaultLocalConfiguration
 ## Next Steps
 
 - Explore [Features](features.md) for detailed capabilities
-- Review the [API Documentation](../api/index.html) for complete reference
 - Check out example projects in the repository
 
 ## Troubleshooting
