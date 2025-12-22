@@ -11,12 +11,12 @@ namespace Vault.Validators;
 public class VaultLocalConfigurationValidator
     : AbstractValidator<VaultLocalConfiguration>
 {
-  /// <summary>
-  /// Initializes a new instance of the <see cref="VaultLocalConfigurationValidator"/> class.
-  /// </summary>
-  public VaultLocalConfigurationValidator()
-  {
-    // Include base validations
-    Include(new VaultDefaultConfigurationValidator());
-  }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="VaultLocalConfigurationValidator"/> class.
+    /// </summary>
+    public VaultLocalConfigurationValidator()
+    {
+        // Include base validations
+        Include(new VaultDefaultConfigurationValidator());
+    }
 }
