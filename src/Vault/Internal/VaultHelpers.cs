@@ -88,7 +88,7 @@ internal static class VaultHelpers
         try
         {
             // Get AWS credentials
-            var credentials = new Amazon.Runtime.InstanceProfileAWSCredentials();
+            using var credentials = new Amazon.Runtime.InstanceProfileAWSCredentials();
             var immutableCredentials = credentials.GetCredentials();
 
             // STS Configuration - Global endpoint (us-east-1)
@@ -161,7 +161,7 @@ internal static class VaultHelpers
                 {
                     ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
                 };
-                var httpClient = new HttpClient(httpClientHandler);
+                var httpClient = new HttpClient(httpClientHandler, disposeHandler: true);
                 testClientSettings.MyHttpClientProviderFunc = handler => httpClient;
             }
 

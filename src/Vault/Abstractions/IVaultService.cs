@@ -1,33 +1,33 @@
-namespace Vault.Abstractions;
+ï»¿namespace Vault.Abstractions;
 
 /// <summary>
-/// Service pour interagir avec HashiCorp Vault.
+/// Service for interacting with HashiCorp Vault.
 /// </summary>
 public interface IVaultService
 {
     /// <summary>
-    /// Liste tous les environnements disponibles dans le KV Vault.
+    /// Lists all available environments in the Vault KV.
     /// </summary>
-    /// <returns>La liste des noms d'environnements.</returns>
-    /// <exception cref="Exceptions.VaultException">En cas d'erreur lors de la communication avec Vault.</exception>
+    /// <returns>The list of environment names.</returns>
+    /// <exception cref="Exceptions.VaultException">When an error occurs during communication with Vault.</exception>
     Task<IEnumerable<string>> ListEnvironmentsAsync();
 
     /// <summary>
-    /// Récupère tous les secrets pour un environnement donné.
+    /// Retrieves all secrets for a given environment.
     /// </summary>
-    /// <param name="environment">Le nom de l'environnement (ex: DEV, PROD).</param>
-    /// <returns>Un dictionnaire contenant tous les secrets (clé/valeur).</returns>
-    /// <exception cref="ArgumentException">Si l'environnement est vide ou null.</exception>
-    /// <exception cref="Exceptions.VaultException">En cas d'erreur lors de la communication avec Vault.</exception>
+    /// <param name="environment">The environment name (e.g., DEV, PROD).</param>
+    /// <returns>A dictionary containing all secrets (key/value pairs).</returns>
+    /// <exception cref="ArgumentException">If the environment is empty or null.</exception>
+    /// <exception cref="Exceptions.VaultException">When an error occurs during communication with Vault.</exception>
     Task<Dictionary<string, object>> GetSecretsAsync(string environment);
 
     /// <summary>
-    /// Récupère une valeur de secret spécifique.
+    /// Retrieves a specific secret value.
     /// </summary>
-    /// <param name="environment">Le nom de l'environnement.</param>
-    /// <param name="key">La clé du secret.</param>
-    /// <returns>La valeur du secret, ou null si la clé n'existe pas.</returns>
-    /// <exception cref="ArgumentException">Si l'environnement ou la clé est vide ou null.</exception>
-    /// <exception cref="Exceptions.VaultException">En cas d'erreur lors de la communication avec Vault.</exception>
+    /// <param name="environment">The environment name.</param>
+    /// <param name="key">The secret key.</param>
+    /// <returns>The secret value, or null if the key does not exist.</returns>
+    /// <exception cref="ArgumentException">If the environment or key is empty or null.</exception>
+    /// <exception cref="Exceptions.VaultException">When an error occurs during communication with Vault.</exception>
     Task<object?> GetSecretValueAsync(string environment, string key);
 }

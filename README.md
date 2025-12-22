@@ -119,10 +119,15 @@ public class MyService
         _vaultService = vaultService;
     }
 
-    public async Task<string> GetSecretAsync(string path)
+    public async Task<string> GetSecretAsync(string key)
     {
-        var secrets = await _vaultService.GetSecretsAsync("production", path);
-        return secrets["my-key"];
+        var secretValue = await _vaultService.GetSecretValueAsync("production", key);
+        return secretValue?.ToString() ?? throw new InvalidOperationException($"Secret '{key}' not found");
+    }
+
+    public async Task<Dictionary<string, object>> GetAllSecretsAsync()
+    {
+        return await _vaultService.GetSecretsAsync("production");
     }
 }
 ```
