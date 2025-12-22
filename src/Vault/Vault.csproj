@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net8.0</TargetFrameworks>
-    <PackageId>BouyguesTelecom.Vault.Extensions</PackageId>
+    <PackageId>Vault.Extension.Configuration</PackageId>
     <!-- <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion> -->
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
