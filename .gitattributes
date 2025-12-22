@@ -3,6 +3,17 @@
 ###############################################################################
 * text=auto
 
+# Force CRLF line endings for all C# and project files
+*.cs text eol=crlf
+*.csproj text eol=crlf
+*.sln text eol=crlf
+*.props text eol=crlf
+*.targets text eol=crlf
+*.config text eol=crlf
+*.json text eol=crlf
+*.xml text eol=crlf
+*.md text eol=crlf
+
 # Ensure shell scripts use LF line endings (linux only accepts LF)
 *.sh eol=lf
 *.ps1 eol=lf

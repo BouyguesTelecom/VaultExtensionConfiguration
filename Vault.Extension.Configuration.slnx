@@ -21,6 +21,6 @@
     <File Path="test/Directory.Build.props" />
     <File Path="test/Directory.Build.targets" />
   </Folder>
-  <Project Path="src/Vault.Extension.Configuration/Vault.Extension.Configuration.csproj" />
-  <Project Path="test/Vault.Extension.Configuration.Tests/Vault.Extension.Configuration.Tests.csproj" />
+  <Project Path="src/Vault/Vault.csproj" />
+  <Project Path="test/Vault.Tests/Vault.Tests.csproj" />
 </Solution>
