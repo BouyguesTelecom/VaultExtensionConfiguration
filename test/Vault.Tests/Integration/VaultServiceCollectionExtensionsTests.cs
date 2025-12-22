@@ -4,7 +4,9 @@
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using Vault.Enum;
 using Vault.Exceptions;
+using Vault.Extensions;
 using Vault.Options;
 using VaultSharp.V1.AuthMethods;
 using Xunit;

@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Vault.Enum;
 using Vault.Options;
 
 namespace Vault.Validators;

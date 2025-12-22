@@ -4,6 +4,7 @@
 using FluentAssertions;
 using FluentValidation.TestHelper;
 using NSubstitute;
+using Vault.Enum;
 using Vault.Options;
 using Vault.Validators;
 using VaultSharp.V1.AuthMethods;

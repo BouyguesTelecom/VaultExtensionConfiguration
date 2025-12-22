@@ -1,3 +1,4 @@
+using Vault.Enum;
 using Vault.Exceptions;
 using Vault.Options;
 using VaultSharp;

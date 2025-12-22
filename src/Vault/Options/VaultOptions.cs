@@ -1,3 +1,4 @@
+using Vault.Enum;
 using VaultSharp.V1.AuthMethods;
 
 namespace Vault.Options;
