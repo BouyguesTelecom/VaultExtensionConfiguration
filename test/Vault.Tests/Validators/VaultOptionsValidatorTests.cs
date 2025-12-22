@@ -33,7 +33,7 @@ public class VaultOptionsValidatorTests
             Configuration = new VaultDefaultConfiguration
             {
                 VaultUrl = "https://vault.example.com",
-                MountPoint = "kv"
+                MountPoint = "kv",
             },
         };
 
@@ -74,7 +74,7 @@ public class VaultOptionsValidatorTests
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv",
-                Environment = "thomas"
+                Environment = "thomas",
             },
         };
 
@@ -97,7 +97,7 @@ public class VaultOptionsValidatorTests
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv",
-                TokenFilePath = "%USERPROFILE%\\.vault-token"
+                TokenFilePath = "%USERPROFILE%\\.vault-token",
             },
         };
 
@@ -119,7 +119,7 @@ public class VaultOptionsValidatorTests
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "kv",
-                TokenFilePath = string.Empty
+                TokenFilePath = string.Empty,
             },
         };
 
@@ -140,7 +140,7 @@ public class VaultOptionsValidatorTests
             Configuration = new VaultLocalConfiguration // Mauvais type
             {
                 VaultUrl = "https://vault.example.com",
-                MountPoint = "kv"
+                MountPoint = "kv",
             },
         };
 
@@ -165,7 +165,7 @@ public class VaultOptionsValidatorTests
                 MountPoint = "kv",
                 Environment = "thomas",
                 AwsIamRoleName = "my-custom-role",
-                AwsAuthMountPoint = "aws"
+                AwsAuthMountPoint = "aws",
             },
         };
 
@@ -188,7 +188,7 @@ public class VaultOptionsValidatorTests
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "HELLOWORLD-FORMATION",
                 Environment = "thomas",
-                AwsAuthMountPoint = "aws"
+                AwsAuthMountPoint = "aws",
             },
         };
 
@@ -211,7 +211,7 @@ public class VaultOptionsValidatorTests
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "HELLOWORLD-FORMATION",
                 Environment = string.Empty, // Requis
-                AwsAuthMountPoint = "aws"
+                AwsAuthMountPoint = "aws",
             },
         };
 
@@ -331,7 +331,7 @@ public class VaultOptionsValidatorTests
                 VaultUrl = "https://vault.production.com:8200",
                 MountPoint = "HELLOWORLD-FORMATION",
                 TokenFilePath = "C:\\Users\\thomas\\.vault-token",
-                IgnoreSslErrors = false
+                IgnoreSslErrors = false,
             },
         };
 
@@ -355,7 +355,7 @@ public class VaultOptionsValidatorTests
                 MountPoint = "HELLOWORLD-FORMATION",
                 Environment = "production",
                 AwsAuthMountPoint = "aws",
-                IgnoreSslErrors = false
+                IgnoreSslErrors = false,
             },
         };
 
@@ -377,7 +377,7 @@ public class VaultOptionsValidatorTests
             {
                 VaultUrl = string.Empty,
                 MountPoint = string.Empty,
-                TokenFilePath = string.Empty
+                TokenFilePath = string.Empty,
             },
         };
 
