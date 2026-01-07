@@ -17,14 +17,15 @@ public class VaultService
 
     public VaultService(
         VaultOptions options,
-        ILogger<VaultService> logger
-    )
+        ILogger<VaultService> logger)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         if (!options.IsActivated)
+        {
             throw new InvalidOperationException("Vault service is not activated. Check Vault:IsActivated configuration.");
+        }
 
         try
         {
@@ -62,7 +63,6 @@ public class VaultService
             throw;
         }
     }
-
 
     public async Task<IEnumerable<string>> ListEnvironmentsAsync()
     {
@@ -137,6 +137,7 @@ public class VaultService
                         _logger.LogDebug("Property '{Part}' not found in path '{Path}'", part, path);
                         return null;
                     }
+
                     currentValue = ConvertJsonElement(jsonProperty);
                 }
                 else
@@ -160,7 +161,7 @@ public class VaultService
     }
 
     /// <summary>
-    /// Convert a JsonElement to a native object
+    /// Convert a JsonElement to a native object.
     /// </summary>
     private static object? ConvertJsonElement(JsonElement element)
     {
@@ -176,5 +177,4 @@ public class VaultService
             _ => element.ToString()
         };
     }
-
 }

@@ -1,7 +1,5 @@
-// <copyright file="VaultOptionsValidatorTests.cs" company="Bouygues Telecom">
 // Copyright (c) Bouygues Telecom. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-// </copyright>
 
 using NSubstitute;
 using Vault.Enum;
@@ -25,7 +23,7 @@ public class VaultOptionsValidatorTests
         VaultOptions? vaultOptions = null;
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() => VaultOptionsValidator.Validate(vaultOptions!));
+        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(() => VaultOptionsValidator.Validate(vaultOptions!));
         Assert.Equal(nameof(vaultOptions), exception.ParamName);
     }
 
@@ -59,7 +57,7 @@ public class VaultOptionsValidatorTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
         Assert.Contains("AuthenticationType", exception.Message);
         Assert.Contains("cannot be 'None'", exception.Message);
     }
@@ -76,7 +74,7 @@ public class VaultOptionsValidatorTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
         Assert.Contains("Configuration is missing", exception.Message);
     }
 
@@ -97,7 +95,7 @@ public class VaultOptionsValidatorTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
         Assert.Contains("VaultUrl", exception.Message);
         Assert.Contains("missing", exception.Message);
     }
@@ -119,7 +117,7 @@ public class VaultOptionsValidatorTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
         Assert.Contains("VaultUrl", exception.Message);
         Assert.Contains("missing", exception.Message);
     }
@@ -141,7 +139,7 @@ public class VaultOptionsValidatorTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
         Assert.Contains("MountPoint", exception.Message);
         Assert.Contains("missing", exception.Message);
     }
@@ -163,7 +161,7 @@ public class VaultOptionsValidatorTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
         Assert.Contains("MountPoint", exception.Message);
         Assert.Contains("missing", exception.Message);
     }
@@ -204,7 +202,7 @@ public class VaultOptionsValidatorTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
         Assert.Contains("VaultLocalConfiguration", exception.Message);
         Assert.Contains("Local authentication", exception.Message);
     }
@@ -226,7 +224,7 @@ public class VaultOptionsValidatorTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
         Assert.Contains("TokenFilePath", exception.Message);
         Assert.Contains("missing", exception.Message);
     }
@@ -248,7 +246,7 @@ public class VaultOptionsValidatorTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
         Assert.Contains("TokenFilePath", exception.Message);
         Assert.Contains("missing", exception.Message);
     }
@@ -290,7 +288,7 @@ public class VaultOptionsValidatorTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
         Assert.Contains("VaultAwsIAMConfiguration", exception.Message);
         Assert.Contains("AWS_IAM authentication", exception.Message);
     }
@@ -318,7 +316,7 @@ public class VaultOptionsValidatorTests
     public void Validate_WhenCustomAuthWithValidConfiguration_DoesNotThrow()
     {
         // Arrange
-        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
 
         var vaultOptions = new VaultOptions
         {
@@ -352,7 +350,7 @@ public class VaultOptionsValidatorTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
         Assert.Contains("VaultCustomConfiguration", exception.Message);
         Assert.Contains("Custom authentication", exception.Message);
     }
@@ -374,7 +372,7 @@ public class VaultOptionsValidatorTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
         Assert.Contains("AuthMethodFactory", exception.Message);
         Assert.Contains("must be provided", exception.Message);
     }

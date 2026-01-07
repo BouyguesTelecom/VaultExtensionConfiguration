@@ -13,20 +13,20 @@ public class VaultAwsIAMConfiguration
     /// {MountPoint}-{Environment}-role
     /// Example: MountPoint="HELLOWORLD-FORMATION", Environment="thomas" -> "HELLOWORLD-FORMATION-thomas-role"
     /// This pattern corresponds to the naming convention used by your organization
-    /// If you want to use a different role name, explicitly define this property
+    /// If you want to use a different role name, explicitly define this property.
     /// </summary>
     public string? AwsIamRoleName { get; set; }
 
     /// <summary>
     /// Deployment environment (dev, test, prod, thomas, etc.)
     /// Used to automatically build the Vault role name if AwsIamRoleName is not defined
-    /// Pattern: {MountPoint}-{Environment}-role
+    /// Pattern: {MountPoint}-{Environment}-role.
     /// </summary>
     public string? Environment { get; set; }
 
     /// <summary>
     /// AWS auth method mount point in Vault
-    /// Default: "aws"
+    /// Default: "aws".
     /// </summary>
     public string AwsAuthMountPoint { get; set; } = "aws";
 }

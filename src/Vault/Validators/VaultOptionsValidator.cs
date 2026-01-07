@@ -6,16 +6,16 @@ namespace Vault.Validators;
 
 /// <summary>
 /// Validator for VaultOptions configuration
-/// Ensures all required settings are properly configured based on the authentication type
+/// Ensures all required settings are properly configured based on the authentication type.
 /// </summary>
 public static class VaultOptionsValidator
 {
     /// <summary>
-    /// Validates VaultOptions and throws InvalidOperationException if validation fails
+    /// Validates VaultOptions and throws InvalidOperationException if validation fails.
     /// </summary>
-    /// <param name="vaultOptions">The VaultOptions to validate</param>
-    /// <exception cref="ArgumentNullException">Thrown when vaultOptions is null</exception>
-    /// <exception cref="InvalidOperationException">Thrown when validation fails</exception>
+    /// <param name="vaultOptions">The VaultOptions to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown when vaultOptions is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when validation fails.</exception>
     public static void Validate(VaultOptions vaultOptions)
     {
         if (vaultOptions == null)
@@ -59,7 +59,7 @@ public static class VaultOptionsValidator
     }
 
     /// <summary>
-    /// Validates common configuration properties required by all authentication types
+    /// Validates common configuration properties required by all authentication types.
     /// </summary>
     private static void ValidateCommonConfiguration(VaultDefaultConfiguration config)
     {
@@ -83,7 +83,7 @@ public static class VaultOptionsValidator
     }
 
     /// <summary>
-    /// Validates configuration for Local authentication
+    /// Validates configuration for Local authentication.
     /// </summary>
     private static void ValidateLocalConfiguration(VaultDefaultConfiguration config)
     {
@@ -103,7 +103,7 @@ public static class VaultOptionsValidator
     }
 
     /// <summary>
-    /// Validates configuration for AWS IAM authentication
+    /// Validates configuration for AWS IAM authentication.
     /// </summary>
     private static void ValidateAwsIamConfiguration(VaultDefaultConfiguration config)
     {
@@ -119,7 +119,7 @@ public static class VaultOptionsValidator
     }
 
     /// <summary>
-    /// Validates configuration for Custom authentication
+    /// Validates configuration for Custom authentication.
     /// </summary>
     private static void ValidateCustomConfiguration(VaultDefaultConfiguration config)
     {

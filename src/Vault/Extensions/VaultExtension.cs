@@ -17,12 +17,12 @@ public static class VaultExtension
     /// <summary>
     /// Fully configures Vault: adds configuration source and registers VaultService.
     /// </summary>
-    /// <param name="services">The service collection</param>
-    /// <param name="configuration">The application configuration</param>
-    /// <param name="vaultOptions">The Vault options read from appsettings</param>
-    /// <param name="environment">The Vault environment to load (e.g., DEV, PROD, thomas)</param>
-    /// <param name="configureSource">Optional action to configure the Vault configuration source</param>
-    /// <returns>The service collection for chaining</returns>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The application configuration.</param>
+    /// <param name="vaultOptions">The Vault options read from appsettings.</param>
+    /// <param name="environment">The Vault environment to load (e.g., DEV, PROD, thomas).</param>
+    /// <param name="configureSource">Optional action to configure the Vault configuration source.</param>
+    /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddVault(
         this IServiceCollection services,
         IConfigurationBuilder configuration,
@@ -59,8 +59,8 @@ public static class VaultExtension
     /// <summary>
     /// Initialize Vault providers after the application is built.
     /// </summary>
-    /// <param name="app">The web application</param>
-    /// <returns>The web application for chaining</returns>
+    /// <param name="app">The web application.</param>
+    /// <returns>The web application for chaining.</returns>
     public static WebApplication UseVault(this WebApplication app)
     {
         if (app == null)

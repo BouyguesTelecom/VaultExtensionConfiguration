@@ -11,7 +11,7 @@ namespace Vault.Helpers;
 public static class VaultHelpers
 {
     /// <summary>
-    /// Retrieve the configuration (already in the correct instance according to the authentication type)
+    /// Retrieve the configuration (already in the correct instance according to the authentication type).
     /// </summary>
     public static VaultDefaultConfiguration GetConfiguration(this VaultOptions options)
     {
@@ -19,7 +19,7 @@ public static class VaultHelpers
     }
 
     /// <summary>
-    /// Create the appropriate authentication method according to the configured type
+    /// Create the appropriate authentication method according to the configured type.
     /// </summary>
     public static IAuthMethodInfo? CreateAuthMethod(this VaultOptions options)
     {
@@ -52,11 +52,9 @@ public static class VaultHelpers
         // Determine the role name
         // TODO we will add a fluent check on the options to say:
         // - MountPoint & Environment are mandatory in any case
-
         string roleName = !string.IsNullOrWhiteSpace(config.AwsIamRoleName)
             ? config.AwsIamRoleName
             : $"{config.MountPoint}-{config.Environment}-role";
-
 
         // Retrieve AWS credentials
         var credentials = new Amazon.Runtime.InstanceProfileAWSCredentials();
@@ -85,8 +83,7 @@ public static class VaultHelpers
             path: "/",
             queryString: "",
             headers: headers,
-            body: requestBody
-        );
+            body: requestBody);
 
         var headersForVault = new Dictionary<string, string>(signedHeaders);
         var headersJson = System.Text.Json.JsonSerializer.Serialize(headersForVault);
@@ -100,8 +97,7 @@ public static class VaultHelpers
                 mountPoint: awsAuthMountPoint,
                 requestHeaders: base64EncodedIamRequestHeaders,
                 requestBody: base64EncodedIamRequestBody,
-                roleName: roleName
-            );
+                roleName: roleName);
 
             // Validate authentication
             var testClientSettings = new VaultClientSettings(config.VaultUrl, authMethodInfo);
@@ -161,9 +157,10 @@ public static class VaultHelpers
         var expandedPath = Environment.ExpandEnvironmentVariables(tokenFilePath);
 
         if (!File.Exists(expandedPath))
+        {
             throw new FileNotFoundException($"Token file does not exist: {expandedPath}");
+        }
 
         return File.ReadAllText(expandedPath).Trim();
     }
-
 }

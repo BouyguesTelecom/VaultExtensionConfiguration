@@ -19,7 +19,8 @@ public class VaultConfigurationProvider
     private bool _disposed;
 
     /// <summary>
-    /// Main constructor used when VaultService is already available
+    /// Initializes a new instance of the <see cref="VaultConfigurationProvider"/> class.
+    /// Main constructor used when VaultService is already available.
     /// </summary>
     public VaultConfigurationProvider(
         VaultConfigurationSource source,
@@ -38,8 +39,9 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="VaultConfigurationProvider"/> class.
     /// Constructor for compatibility with IConfigurationSource.Build
-    /// VaultService will be injected later via SetVaultService
+    /// VaultService will be injected later via SetVaultService.
     /// </summary>
     internal VaultConfigurationProvider(VaultConfigurationSource source)
     {
@@ -53,7 +55,7 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
-    /// Inject VaultService after creation (used by extension method)
+    /// Inject VaultService after creation (used by extension method).
     /// </summary>
     internal void SetVaultService(IVaultService vaultService, ILogger<VaultConfigurationProvider>? logger = null)
     {
@@ -75,7 +77,7 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
-    /// Load secrets from Vault
+    /// Load secrets from Vault.
     /// </summary>
     public override void Load()
     {
@@ -162,7 +164,7 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
-    /// Load data and notify changes
+    /// Load data and notify changes.
     /// </summary>
     private void LoadAndNotifyChange()
     {
@@ -178,7 +180,7 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
-    /// Convert an object value to string
+    /// Convert an object value to string.
     /// </summary>
     private static string? ConvertValueToString(object? value)
     {
@@ -196,7 +198,7 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
-    /// Check if a value is JSON
+    /// Check if a value is JSON.
     /// </summary>
     private static bool IsJsonValue(object? value)
     {
@@ -210,7 +212,7 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
-    /// Flatten a JSON value into dotted keys with dot notation
+    /// Flatten a JSON value into dotted keys with dot notation.
     /// </summary>
     private void FlattenJsonValue(string parentKey, object? value, Dictionary<string, string?> data)
     {
@@ -233,7 +235,7 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
-    /// Recursively flatten a JSON element
+    /// Recursively flatten a JSON element.
     /// </summary>
     private void FlattenJsonElement(string parentKey, JsonElement element, Dictionary<string, string?> data)
     {
@@ -248,6 +250,7 @@ public class VaultConfigurationProvider
 
                     FlattenJsonElement(key, property.Value, data);
                 }
+
                 break;
 
             case JsonValueKind.Array:
@@ -258,6 +261,7 @@ public class VaultConfigurationProvider
                     FlattenJsonElement(key, item, data);
                     index++;
                 }
+
                 break;
 
             default:
@@ -268,7 +272,7 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
-    /// Release resources
+    /// Release resources.
     /// </summary>
     public void Dispose()
     {

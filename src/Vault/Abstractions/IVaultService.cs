@@ -10,31 +10,31 @@ namespace Vault.Abstractions;
 public interface IVaultService
 {
     /// <summary>
-    /// Lists all available environments in the KV Vault
+    /// Lists all available environments in the KV Vault.
     /// </summary>
     Task<IEnumerable<string>> ListEnvironmentsAsync();
 
     /// <summary>
-    /// Retrieves all secrets for a given environment
+    /// Retrieves all secrets for a given environment.
     /// </summary>
-    /// <param name="environment">The environment name (e.g., DEV, PROD)</param>
+    /// <param name="environment">The environment name (e.g., DEV, PROD).</param>
     Task<Dictionary<string, object>> GetSecretsAsync(string environment);
 
     /// <summary>
-    /// Retrieves a specific secret value
+    /// Retrieves a specific secret value.
     /// </summary>
-    /// <param name="environment">The environment name</param>
-    /// <param name="key">The secret key</param>
+    /// <param name="environment">The environment name.</param>
+    /// <param name="key">The secret key.</param>
     Task<object?> GetSecretValueAsync(string environment, string key);
 
     /// <summary>
-    /// Retrieves a nested secret value using dot notation
+    /// Retrieves a nested secret value using dot notation.
     /// </summary>
-    /// <param name="environment">The environment name</param>
-    /// <param name="path">The secret path with dot notation (e.g., "level1.level2.level3")</param>
-    /// <returns>The secret value if found, otherwise null</returns>
+    /// <param name="environment">The environment name.</param>
+    /// <param name="path">The secret path with dot notation (e.g., "level1.level2.level3").</param>
+    /// <returns>The secret value if found, otherwise null.</returns>
     /// <example>
-    /// await vaultService.GetNestedSecretValueAsync("thomas", "level1.level2.level3")
+    /// await vaultService.GetNestedSecretValueAsync("thomas", "level1.level2.level3").
     /// </example>
     Task<object?> GetNestedSecretValueAsync(string environment, string path);
 }

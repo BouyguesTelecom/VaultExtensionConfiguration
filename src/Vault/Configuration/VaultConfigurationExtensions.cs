@@ -6,7 +6,7 @@ using Vault.Abstractions;
 namespace Vault.Configuration;
 
 /// <summary>
-/// Extensions to integrate HashiCorp Vault into the ASP.NET Core configuration system
+/// Extensions to integrate HashiCorp Vault into the ASP.NET Core configuration system.
 /// </summary>
 public static class VaultConfigurationExtensions
 {
@@ -14,10 +14,10 @@ public static class VaultConfigurationExtensions
     /// Adds HashiCorp Vault as a configuration source.
     /// Note: AddVault() must be called BEFORE this method to register VaultService.
     /// </summary>
-    /// <param name="builder">The configuration builder</param>
-    /// <param name="environment">The Vault environment to load (e.g., DEV, PROD)</param>
-    /// <param name="configureSource">Optional action to configure the source</param>
-    /// <returns>The configuration builder for chaining</returns>
+    /// <param name="builder">The configuration builder.</param>
+    /// <param name="environment">The Vault environment to load (e.g., DEV, PROD).</param>
+    /// <param name="configureSource">Optional action to configure the source.</param>
+    /// <returns>The configuration builder for chaining.</returns>
     public static IConfigurationBuilder AddVaultConfiguration(
         this IConfigurationBuilder builder,
         string environment,
@@ -49,11 +49,11 @@ public static class VaultConfigurationExtensions
     /// Adds HashiCorp Vault as a configuration source with an existing VaultService.
     /// Useful for tests or when VaultService is created manually.
     /// </summary>
-    /// <param name="builder">The configuration builder</param>
-    /// <param name="environment">The Vault environment to load (e.g., DEV, PROD)</param>
-    /// <param name="vaultService">VaultService instance to use</param>
-    /// <param name="configureSource">Optional action to configure the source</param>
-    /// <returns>The configuration builder for chaining</returns>
+    /// <param name="builder">The configuration builder.</param>
+    /// <param name="environment">The Vault environment to load (e.g., DEV, PROD).</param>
+    /// <param name="vaultService">VaultService instance to use.</param>
+    /// <param name="configureSource">Optional action to configure the source.</param>
+    /// <returns>The configuration builder for chaining.</returns>
     public static IConfigurationBuilder AddVaultConfiguration(
         this IConfigurationBuilder builder,
         string environment,
@@ -94,8 +94,8 @@ public static class VaultConfigurationExtensions
     /// Inject VaultService into all existing VaultConfigurationProvider instances.
     /// To be called after IConfiguration is built to initialize the providers.
     /// </summary>
-    /// <param name="configuration">The built configuration</param>
-    /// <param name="serviceProvider">The service provider containing VaultService</param>
+    /// <param name="configuration">The built configuration.</param>
+    /// <param name="serviceProvider">The service provider containing VaultService.</param>
     public static void InitializeVaultProviders(
         this IConfiguration configuration,
         IServiceProvider serviceProvider)
@@ -134,7 +134,7 @@ public static class VaultConfigurationExtensions
     }
 
     /// <summary>
-    /// Wrapper to allow manual provider injection
+    /// Wrapper to allow manual provider injection.
     /// </summary>
     private class VaultConfigurationSourceWrapper : IConfigurationSource
     {
