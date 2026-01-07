@@ -570,5 +570,4 @@ Or configure your system to trust the Vault CA certificate.
 ## Next Steps
 
 - Learn about all [Features](features.md) and advanced capabilities
-- Check the [API Reference](../api/index.html) for detailed documentation
 - See example projects in the GitHub repository
