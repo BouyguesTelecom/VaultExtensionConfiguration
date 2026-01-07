@@ -14,8 +14,8 @@ public class VaultConfigurationProvider
 {
     private readonly VaultConfigurationSource _source;
     private readonly IVaultService? _vaultService;
-    private Timer? _reloadTimer;
     private readonly ILogger? _logger;
+    private Timer? _reloadTimer;
     private bool _disposed;
 
     /// <summary>
@@ -55,6 +55,31 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
+    /// Load secrets from Vault.
+    /// </summary>
+    public override void Load()
+    {
+        LoadAsync().GetAwaiter().GetResult();
+    }
+
+    /// <summary>
+    /// Release resources.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _reloadTimer?.Dispose();
+        _reloadTimer = null;
+        _disposed = true;
+
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
     /// Inject VaultService after creation (used by extension method).
     /// </summary>
     internal void SetVaultService(IVaultService vaultService, ILogger<VaultConfigurationProvider>? logger = null)
@@ -77,11 +102,35 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
-    /// Load secrets from Vault.
+    /// Convert an object value to string.
     /// </summary>
-    public override void Load()
+    private static string? ConvertValueToString(object? value)
     {
-        LoadAsync().GetAwaiter().GetResult();
+        if (value == null)
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            string s => s,
+            bool b => b.ToString().ToLowerInvariant(),
+            _ => value.ToString()
+        };
+    }
+
+    /// <summary>
+    /// Check if a value is JSON.
+    /// </summary>
+    private static bool IsJsonValue(object? value)
+    {
+        if (value is not string str)
+        {
+            return false;
+        }
+
+        str = str.Trim();
+        return (str.StartsWith("{") && str.EndsWith("}")) || (str.StartsWith("[") && str.EndsWith("]"));
     }
 
     private async Task LoadAsync()
@@ -180,38 +229,6 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
-    /// Convert an object value to string.
-    /// </summary>
-    private static string? ConvertValueToString(object? value)
-    {
-        if (value == null)
-        {
-            return null;
-        }
-
-        return value switch
-        {
-            string s => s,
-            bool b => b.ToString().ToLowerInvariant(),
-            _ => value.ToString()
-        };
-    }
-
-    /// <summary>
-    /// Check if a value is JSON.
-    /// </summary>
-    private static bool IsJsonValue(object? value)
-    {
-        if (value is not string str)
-        {
-            return false;
-        }
-
-        str = str.Trim();
-        return (str.StartsWith("{") && str.EndsWith("}")) || (str.StartsWith("[") && str.EndsWith("]"));
-    }
-
-    /// <summary>
     /// Flatten a JSON value into dotted keys with dot notation.
     /// </summary>
     private void FlattenJsonValue(string parentKey, object? value, Dictionary<string, string?> data)
@@ -269,22 +286,5 @@ public class VaultConfigurationProvider
                 _logger?.LogDebug("Flattened JSON secret: {Key} = {Value}", parentKey, element.ToString());
                 break;
         }
-    }
-
-    /// <summary>
-    /// Release resources.
-    /// </summary>
-    public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _reloadTimer?.Dispose();
-        _reloadTimer = null;
-        _disposed = true;
-
-        GC.SuppressFinalize(this);
     }
 }

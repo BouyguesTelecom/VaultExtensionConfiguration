@@ -9,6 +9,21 @@ namespace Vault.Helpers;
 /// </summary>
 public static class AwsSigV4Helper
 {
+    /// <summary>
+    /// Signs an HTTP request using AWS Signature Version 4.
+    /// </summary>
+    /// <param name="accessKey">The AWS access key ID.</param>
+    /// <param name="secretKey">The AWS secret access key.</param>
+    /// <param name="sessionToken">The optional AWS session token for temporary credentials.</param>
+    /// <param name="region">The AWS region.</param>
+    /// <param name="service">The AWS service name.</param>
+    /// <param name="method">The HTTP method.</param>
+    /// <param name="host">The target host.</param>
+    /// <param name="path">The request path.</param>
+    /// <param name="queryString">The query string.</param>
+    /// <param name="headers">The request headers.</param>
+    /// <param name="body">The optional request body.</param>
+    /// <returns>A dictionary containing the signed headers including the Authorization header.</returns>
     public static Dictionary<string, string> SignRequest(
         string accessKey,
         string secretKey,

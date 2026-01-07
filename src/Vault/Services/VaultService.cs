@@ -8,6 +8,9 @@ using VaultSharp.V1.SecretsEngines;
 
 namespace Vault.Services;
 
+/// <summary>
+/// Implementation of <see cref="IVaultService"/> that provides access to HashiCorp Vault secrets.
+/// </summary>
 public class VaultService
     : IVaultService
 {
@@ -15,6 +18,11 @@ public class VaultService
     private readonly VaultOptions _options;
     private readonly ILogger _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="VaultService"/> class.
+    /// </summary>
+    /// <param name="options">The Vault configuration options.</param>
+    /// <param name="logger">The logger instance.</param>
     public VaultService(
         VaultOptions options,
         ILogger<VaultService> logger)
@@ -64,12 +72,14 @@ public class VaultService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<IEnumerable<string>> ListEnvironmentsAsync()
     {
         var listResponse = await _vaultClient.V1.Secrets.KeyValue.V2.ReadSecretPathsAsync(path: string.Empty);
         return listResponse.Data.Keys.ToList();
     }
 
+    /// <inheritdoc/>
     public async Task<Dictionary<string, object>> GetSecretsAsync(string environment)
     {
         if (string.IsNullOrWhiteSpace(environment))
@@ -87,6 +97,7 @@ public class VaultService
         return new Dictionary<string, object>(secrets.Data.Data);
     }
 
+    /// <inheritdoc/>
     public async Task<object?> GetSecretValueAsync(string environment, string key)
     {
         if (string.IsNullOrWhiteSpace(environment))
@@ -105,6 +116,7 @@ public class VaultService
         return value;
     }
 
+    /// <inheritdoc/>
     public async Task<object?> GetNestedSecretValueAsync(string environment, string path)
     {
         if (string.IsNullOrWhiteSpace(environment))

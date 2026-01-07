@@ -8,6 +8,9 @@ using VaultSharp.V1.AuthMethods.Token;
 
 namespace Vault.Helpers;
 
+/// <summary>
+/// Helper methods for Vault configuration and authentication.
+/// </summary>
 public static class VaultHelpers
 {
     /// <summary>
