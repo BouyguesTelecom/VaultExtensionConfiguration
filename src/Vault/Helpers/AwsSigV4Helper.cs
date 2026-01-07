@@ -1,17 +1,29 @@
-using System.Security.Cryptography;
+ï»¿using System.Security.Cryptography;
 using System.Text;
 
-namespace Vault.Internal;
+namespace Vault.Helpers;
 
 /// <summary>
-/// Helper pour signer des requêtes HTTP avec AWS Signature Version 4.
-/// Implémentation simplifiée pour Vault IAM Auth.
+/// Helper to sign HTTP requests with AWS Signature Version 4
+/// Simplified implementation for Vault IAM Auth.
 /// </summary>
-internal static class AwsSigV4Helper
+public static class AwsSigV4Helper
 {
     /// <summary>
-    /// Signe une requête HTTP avec AWS Signature Version 4.
+    /// Signs an HTTP request using AWS Signature Version 4.
     /// </summary>
+    /// <param name="accessKey">The AWS access key ID.</param>
+    /// <param name="secretKey">The AWS secret access key.</param>
+    /// <param name="sessionToken">The optional AWS session token for temporary credentials.</param>
+    /// <param name="region">The AWS region.</param>
+    /// <param name="service">The AWS service name.</param>
+    /// <param name="method">The HTTP method.</param>
+    /// <param name="host">The target host.</param>
+    /// <param name="path">The request path.</param>
+    /// <param name="queryString">The query string.</param>
+    /// <param name="headers">The request headers.</param>
+    /// <param name="body">The optional request body.</param>
+    /// <returns>A dictionary containing the signed headers including the Authorization header.</returns>
     public static Dictionary<string, string> SignRequest(
         string accessKey,
         string secretKey,
@@ -29,7 +41,7 @@ internal static class AwsSigV4Helper
         var dateStamp = now.ToString("yyyyMMdd");
         var amzDate = now.ToString("yyyyMMddTHHmmssZ");
 
-        // Ajouter les headers AWS obligatoires
+        // Add mandatory AWS headers
         var signedHeaders = new Dictionary<string, string>(headers)
         {
             ["host"] = host,
@@ -41,7 +53,7 @@ internal static class AwsSigV4Helper
             signedHeaders["x-amz-security-token"] = sessionToken;
         }
 
-        // Créer le canonical request
+        // Create the canonical request
         var canonicalUri = string.IsNullOrEmpty(path) ? "/" : path;
         var canonicalQueryString = queryString ?? "";
         var canonicalHeaders = string.Join(
@@ -53,15 +65,15 @@ internal static class AwsSigV4Helper
 
         var canonicalRequest = $"{method}\n{canonicalUri}\n{canonicalQueryString}\n{canonicalHeaders}\n{signedHeadersList}\n{payloadHash}";
 
-        // Créer la string to sign
+        // Create the string to sign
         var credentialScope = $"{dateStamp}/{region}/{service}/aws4_request";
         var stringToSign = $"AWS4-HMAC-SHA256\n{amzDate}\n{credentialScope}\n{HashSHA256(canonicalRequest)}";
 
-        // Calculer la signature
+        // Calculate the signature
         var signingKey = GetSignatureKey(secretKey, dateStamp, region, service);
         var signature = HexEncode(HmacSHA256(stringToSign, signingKey));
 
-        // Ajouter l'authorization header
+        // Add the authorization header
         signedHeaders["Authorization"] = $"AWS4-HMAC-SHA256 Credential={accessKey}/{credentialScope}, SignedHeaders={signedHeadersList}, Signature={signature}";
 
         return signedHeaders;

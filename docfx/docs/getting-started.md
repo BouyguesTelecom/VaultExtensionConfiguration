@@ -36,34 +36,62 @@ Add to your `.csproj` file:
 
 ## Basic Setup
 
-### Step 1: Choose Your Authentication Method
+### Step 1: Register Vault Services
 
-The library supports three authentication methods. Choose the one that fits your deployment scenario:
-
-#### Option A: Local Token (Development)
-
-Best for local development where you have a Vault token file:
+Use the `AddVault` extension method on `IServiceCollection` to register Vault services:
 
 ```csharp
-using Vault.Extensions;
+using Vault.Extentions;
 using Vault.Options;
 using Vault.Enum;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddVault(options =>
+// Register VaultService with dependency injection
+builder.Services.AddVault(
+    builder.Configuration,
+    new VaultOptions
+    {
+        AuthenticationType = VaultAuthenticationType.Local,
+        Configuration = new VaultLocalConfiguration
+        {
+            VaultUrl = "https://vault.example.com",
+            MountPoint = "secret",
+            TokenFilePath = "~/.vault-token"
+        }
+    },
+    environment: "production");
+
+var app = builder.Build();
+
+// Initialize Vault providers (required!)
+app.UseVault();
+
+app.Run();
+```
+
+### Step 2: Choose Your Authentication Method
+
+The library supports three authentication methods:
+
+#### Option A: Local Token (Development)
+
+Best for local development with a Vault token file:
+
+```csharp
+var vaultOptions = new VaultOptions
 {
-    options.AuthenticationType = VaultAuthenticationType.Local;
-    options.Configuration = new VaultLocalConfiguration
+    AuthenticationType = VaultAuthenticationType.Local,
+    Configuration = new VaultLocalConfiguration
     {
         VaultUrl = "https://vault.example.com",
         MountPoint = "secret",
-        TokenFilePath = "~/.vault-token"
-    };
-}, environment: "development");
+        TokenFilePath = "~/.vault-token",
+        IgnoreSslErrors = false // Only true for development
+    }
+};
 
-var app = builder.Build();
-app.Run();
+builder.Services.AddVault(builder.Configuration, vaultOptions, environment: "development");
 ```
 
 #### Option B: AWS IAM (Production on AWS)
@@ -71,197 +99,329 @@ app.Run();
 Ideal for applications running on AWS infrastructure:
 
 ```csharp
-using Vault.Extensions;
-using Vault.Options;
-using Vault.Enum;
-
-var builder = WebApplication.CreateBuilder(args);
-
-builder.AddVault(options =>
+var vaultOptions = new VaultOptions
 {
-    options.AuthenticationType = VaultAuthenticationType.AWS_IAM;
-    options.Configuration = new VaultAwsConfiguration
+    AuthenticationType = VaultAuthenticationType.AWS_IAM,
+    Configuration = new VaultAwsConfiguration
     {
         VaultUrl = "https://vault.example.com",
         MountPoint = "secret",
         Environment = "production",
-        AwsAuthMountPoint = "aws"
-    };
-}, environment: "production");
+        AwsAuthMountPoint = "aws",
+        AwsIamRoleName = "my-app-role" // Optional
+    }
+};
 
-var app = builder.Build();
-app.Run();
+builder.Services.AddVault(builder.Configuration, vaultOptions, environment: "production");
 ```
 
 #### Option C: Custom Authentication
 
-For other authentication methods (AppRole, LDAP, etc.):
+For other authentication methods (AppRole, LDAP, UserPass, Kubernetes, etc.):
 
 ```csharp
-using Vault.Extensions;
-using Vault.Options;
-using Vault.Enum;
 using VaultSharp.V1.AuthMethods.AppRole;
 
-var builder = WebApplication.CreateBuilder(args);
-
-var roleId = "your-role-id";
-var secretId = "your-secret-id";
-
-builder.AddVault(options =>
+var vaultOptions = new VaultOptions
 {
-    options.AuthenticationType = VaultAuthenticationType.Custom;
-    options.Configuration = new VaultDefaultConfiguration
+    AuthenticationType = VaultAuthenticationType.Custom,
+    Configuration = new VaultDefaultConfiguration
     {
         VaultUrl = "https://vault.example.com",
         MountPoint = "secret"
-    };
-    options.CustomAuthMethodInfo = new AppRoleAuthMethodInfo(roleId, secretId);
-}, environment: "production");
+    },
+    CustomAuthMethodInfo = new AppRoleAuthMethodInfo("my-role-id", "my-secret-id")
+};
 
-var app = builder.Build();
-app.Run();
+builder.Services.AddVault(builder.Configuration, vaultOptions, environment: "production");
 ```
 
-### Step 2: Access Secrets in Your Application
+## Using Secrets in Your Application
 
-#### Using IConfiguration
+### Method 1: IConfiguration (Recommended for Static Configuration)
 
-Secrets are automatically loaded into the configuration pipeline:
+Secrets are automatically loaded into the configuration system:
 
 ```csharp
 public class DatabaseService
 {
-    private readonly string _connectionString;
+    private readonly IConfiguration _configuration;
 
     public DatabaseService(IConfiguration configuration)
     {
+        _configuration = configuration;
+    }
+
+    public void Connect()
+    {
         // Access secrets like any other configuration value
-        _connectionString = configuration["Database:ConnectionString"]
-            ?? throw new InvalidOperationException("Connection string not found");
+        var connectionString = _configuration["Database:ConnectionString"];
+        var password = _configuration["Database:Password"];
+
+        // Use the secrets
+        Console.WriteLine($"Connecting with password: {password?.Substring(0, 3)}...");
     }
 }
 ```
 
-#### Using IVaultService
+### Method 2: IOptions Pattern (Strongly-Typed Configuration)
 
-For dynamic secret retrieval:
+Bind Vault secrets to strongly-typed classes:
+
+```csharp
+// Define your settings class
+public class DatabaseSettings
+{
+    public string ConnectionString { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public int Timeout { get; set; } = 30;
+}
+
+// In Program.cs - bind configuration section
+builder.Services.Configure<DatabaseSettings>(
+    builder.Configuration.GetSection("Database"));
+
+// Use in your services with type safety
+public class DatabaseService
+{
+    private readonly DatabaseSettings _settings;
+
+    public DatabaseService(IOptions<DatabaseSettings> options)
+    {
+        _settings = options.Value;
+    }
+
+    public void Connect()
+    {
+        var fullConnectionString = $"{_settings.ConnectionString};Password={_settings.Password};Timeout={_settings.Timeout}";
+        // Use connection string
+    }
+}
+```
+
+### Method 3: IVaultService (Dynamic Secret Retrieval)
+
+For runtime secret access and dynamic scenarios:
 
 ```csharp
 using Vault.Abstractions;
 
-public class SecretService
+public class SecretManager
 {
     private readonly IVaultService _vaultService;
 
-    public SecretService(IVaultService vaultService)
+    public SecretManager(IVaultService vaultService)
     {
         _vaultService = vaultService;
     }
 
-    public async Task<string> GetApiKeyAsync()
+    // Get a single secret value
+    public async Task<string?> GetApiKeyAsync()
     {
-        var value = await _vaultService.GetSecretValueAsync("production", "ApiKey");
-        return value?.ToString() ?? throw new InvalidOperationException("API key not found");
+        var apiKey = await _vaultService.GetSecretValueAsync("production", "ApiKey");
+        return apiKey?.ToString();
     }
 
-    public async Task<Dictionary<string, object>> GetAllSecretsAsync()
+    // Get all secrets for an environment
+    public async Task<Dictionary<string, object>> LoadAllSecretsAsync()
     {
         return await _vaultService.GetSecretsAsync("production");
+    }
+
+    // Get nested secret using dot notation
+    public async Task<string?> GetNestedValueAsync()
+    {
+        // Access nested structure: { "Api": { "Settings": { "Key": "value" } } }
+        var value = await _vaultService.GetNestedSecretValueAsync("production", "Api.Settings.Key");
+        return value?.ToString();
+    }
+
+    // List all available environments
+    public async Task<IEnumerable<string>> GetEnvironmentsAsync()
+    {
+        return await _vaultService.ListEnvironmentsAsync();
     }
 }
 ```
 
-## Configuration Options
+## Complete Example
 
-### Environment Parameter
-
-The `environment` parameter specifies which Vault path to load secrets from:
+Here's a complete example combining all three approaches:
 
 ```csharp
-builder.AddVault(
-    options => { /* ... */ },
-    environment: "production" // Loads from {MountPoint}/production
-);
+using Vault.Extentions;
+using Vault.Options;
+using Vault.Enum;
+using Vault.Abstractions;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// 1. Configure Vault
+var vaultOptions = new VaultOptions
+{
+    AuthenticationType = VaultAuthenticationType.AWS_IAM,
+    Configuration = new VaultAwsConfiguration
+    {
+        VaultUrl = "https://vault.example.com",
+        MountPoint = "myapp",
+        Environment = "production"
+    }
+};
+
+builder.Services.AddVault(builder.Configuration, vaultOptions, environment: "production");
+
+// 2. Register strongly-typed configuration
+public class ApiSettings
+{
+    public string ApiKey { get; set; } = string.Empty;
+    public string BaseUrl { get; set; } = string.Empty;
+}
+
+builder.Services.Configure<ApiSettings>(builder.Configuration.GetSection("Api"));
+
+// 3. Register your services
+builder.Services.AddScoped<SecretManager>();
+
+var app = builder.Build();
+
+// Initialize Vault (required!)
+app.UseVault();
+
+// Example endpoints showing all three usage patterns
+app.MapGet("/config", (IConfiguration config) =>
+{
+    return new
+    {
+        apiKey = config["Api:ApiKey"],
+        baseUrl = config["Api:BaseUrl"]
+    };
+});
+
+app.MapGet("/options", (IOptions<ApiSettings> options) =>
+{
+    return new { settings = options.Value };
+});
+
+app.MapGet("/vault", async (IVaultService vault) =>
+{
+    return await vault.GetSecretsAsync("production");
+});
+
+app.Run();
 ```
 
-### Section Prefix
 
-Organize secrets under a configuration section:
-
-```csharp
-builder.AddVault(
-    options => { /* ... */ },
-    environment: "production",
-    sectionPrefix: "MyApp" // Secrets available under MyApp:SecretName
-);
-```
-
-### Add Unregistered Entries
-
-Control whether to include secrets not already in configuration:
-
-```csharp
-builder.AddVault(
-    options => { /* ... */ },
-    environment: "production",
-    sectionPrefix: null,
-    addUnregisteredEntries: true // Include all Vault secrets
-);
-```
 
 ## Vault Server Setup
 
 ### Required Vault Configuration
 
-1. **Enable KV Secrets Engine**:
+1. **Enable KV Secrets Engine (v2)**:
    ```bash
    vault secrets enable -path=secret kv-v2
    ```
 
 2. **Create secrets for your environment**:
    ```bash
-   vault kv put secret/production Database:ConnectionString="Server=..." ApiKey="..."
+   # Simple key-value secrets
+   vault kv put secret/production \
+       ApiKey="your-api-key" \
+       Database:ConnectionString="Server=..." \
+       Database:Password="secret-password"
+
+   # Nested structure
+   vault kv put secret/production \
+       Api.Settings.Key="api-key" \
+       Api.Settings.BaseUrl="https://api.example.com"
    ```
 
-3. **Configure authentication method** (example for AWS IAM):
+3. **Configure authentication method**:
+
+   **For Local (token-based)**:
+   ```bash
+   # Generate a token
+   vault token create -policy=secret-read
+   # Save token to file (e.g., ~/.vault-token)
+   ```
+
+   **For AWS IAM**:
    ```bash
    vault auth enable aws
-   vault write auth/aws/role/secret-production-role \
+   vault write auth/aws/role/myapp-production-role \
        auth_type=iam \
        bound_iam_principal_arn="arn:aws:iam::123456789:role/my-app-role" \
-       policies=secret-production-policy
+       policies=myapp-production-policy \
+       max_ttl=1h
    ```
+
+   **For AppRole**:
+   ```bash
+   vault auth enable approle
+   vault write auth/approle/role/my-app \
+       token_policies=secret-read \
+       token_ttl=1h
+   vault read auth/approle/role/my-app/role-id
+   vault write -f auth/approle/role/my-app/secret-id
+   ```
+
+4. **Create policy for secret access**:
+   ```bash
+   vault policy write myapp-production-policy - <<EOF
+   path "secret/data/production/*" {
+     capabilities = ["read", "list"]
+   }
+   path "secret/metadata/production/*" {
+     capabilities = ["read", "list"]
+   }
+   EOF
+   ```
+
+## Important: UseVault() Call
+
+**You must call `app.UseVault()` after building your application!** This initializes the Vault configuration providers:
+
+```csharp
+var app = builder.Build();
+
+// This is REQUIRED - do not forget!
+app.UseVault();
+
+app.MapControllers();
+app.Run();
+```
+
+Without `UseVault()`, secrets won't be loaded into the configuration system.
 
 ## Error Handling
 
-The library provides specific exceptions for different error scenarios:
+The library provides specific exceptions for different scenarios:
 
 ```csharp
 using Vault.Exceptions;
 
 try
 {
-    builder.AddVault(options =>
-    {
-        // Configuration
-    }, environment: "production");
+    var vaultOptions = new VaultOptions { /* ... */ };
+    builder.Services.AddVault(builder.Configuration, vaultOptions, environment: "production");
+
+    var app = builder.Build();
+    app.UseVault();
 }
 catch (VaultConfigurationException ex)
 {
-    // Handle configuration errors (missing required fields, invalid types, etc.)
+    // Configuration validation errors
     Console.Error.WriteLine($"Configuration error: {ex.Message}");
     throw;
 }
 catch (VaultAuthenticationException ex)
 {
-    // Handle authentication failures
+    // Authentication failures
     Console.Error.WriteLine($"Authentication failed: {ex.Message}");
     throw;
 }
 catch (FileNotFoundException ex) when (ex.Message.Contains("Token file"))
 {
-    // Handle missing token file for Local authentication
+    // Missing token file (Local authentication)
     Console.Error.WriteLine($"Token file not found: {ex.Message}");
     throw;
 }
@@ -269,102 +429,145 @@ catch (FileNotFoundException ex) when (ex.Message.Contains("Token file"))
 
 ## Best Practices
 
-### 1. Use Environment Variables for Sensitive Data
+### 1. Use Environment-Specific Configuration
 
 ```csharp
-builder.AddVault(options =>
+var environment = builder.Environment.EnvironmentName; // "Development", "Production", etc.
+
+var vaultOptions = new VaultOptions
 {
-    options.Configuration = new VaultLocalConfiguration
+    AuthenticationType = builder.Environment.IsDevelopment()
+        ? VaultAuthenticationType.Local
+        : VaultAuthenticationType.AWS_IAM,
+    Configuration = builder.Environment.IsDevelopment()
+        ? new VaultLocalConfiguration
+        {
+            VaultUrl = "http://localhost:8200",
+            MountPoint = "secret",
+            TokenFilePath = "~/.vault-token",
+            IgnoreSslErrors = true // Only in development!
+        }
+        : new VaultAwsConfiguration
+        {
+            VaultUrl = "https://vault.production.example.com",
+            MountPoint = "myapp",
+            Environment = "production"
+        }
+};
+
+builder.Services.AddVault(builder.Configuration, vaultOptions, environment: environment);
+```
+
+### 2. Use Environment Variables for Vault Configuration
+
+```csharp
+var vaultOptions = new VaultOptions
+{
+    AuthenticationType = VaultAuthenticationType.Local,
+    Configuration = new VaultLocalConfiguration
     {
         VaultUrl = Environment.GetEnvironmentVariable("VAULT_URL")
             ?? throw new InvalidOperationException("VAULT_URL not set"),
-        MountPoint = "secret",
-        TokenFilePath = "~/.vault-token"
-    };
-}, environment: builder.Environment.EnvironmentName);
+        MountPoint = Environment.GetEnvironmentVariable("VAULT_MOUNT_POINT") ?? "secret",
+        TokenFilePath = Environment.GetEnvironmentVariable("VAULT_TOKEN_FILE") ?? "~/.vault-token"
+    }
+};
 ```
 
-### 2. Validate Configuration on Startup
+### 3. Never Disable SSL in Production
 
-The library automatically validates configuration, but catch exceptions early:
+```csharp
+var vaultOptions = new VaultOptions
+{
+    Configuration = new VaultLocalConfiguration
+    {
+        VaultUrl = "https://vault.example.com",
+        MountPoint = "secret",
+        TokenFilePath = "~/.vault-token",
+        // NEVER set to true in production!
+        IgnoreSslErrors = builder.Environment.IsDevelopment()
+    }
+};
+```
+
+### 4. Validate Configuration Early
 
 ```csharp
 try
 {
     var app = builder.Build();
+    app.UseVault();
     await app.RunAsync();
 }
 catch (VaultConfigurationException ex)
 {
-    // Log and exit gracefully
-    Console.Error.WriteLine($"Failed to start: {ex.Message}");
+    Console.Error.WriteLine($"Vault configuration invalid: {ex.Message}");
     Environment.Exit(1);
 }
 ```
 
-### 3. Use Appropriate Authentication for Each Environment
+### 5. Choose the Right Access Pattern
 
-```csharp
-var isDevelopment = builder.Environment.IsDevelopment();
-
-builder.AddVault(options =>
-{
-    if (isDevelopment)
-    {
-        options.AuthenticationType = VaultAuthenticationType.Local;
-        options.Configuration = new VaultLocalConfiguration { /* ... */ };
-    }
-    else
-    {
-        options.AuthenticationType = VaultAuthenticationType.AWS_IAM;
-        options.Configuration = new VaultAwsConfiguration { /* ... */ };
-    }
-}, environment: builder.Environment.EnvironmentName);
-```
-
-### 4. Don't Disable SSL in Production
-
-```csharp
-options.Configuration = new VaultLocalConfiguration
-{
-    VaultUrl = "https://vault.example.com",
-    MountPoint = "secret",
-    TokenFilePath = "~/.vault-token",
-    // Only for development/testing!
-    IgnoreSslErrors = builder.Environment.IsDevelopment()
-};
-```
-
-## Next Steps
-
-- Explore [Features](features.md) for detailed capabilities
-- Check out example projects in the repository
+- **IConfiguration**: Best for secrets needed at startup (database connections, API keys loaded once)
+- **IOptions<T>**: Best for strongly-typed configuration with validation
+- **IVaultService**: Best for dynamic secret retrieval, refreshing secrets, or runtime access
 
 ## Troubleshooting
 
-### "Unable to load service index" error
+### "VaultService not registered" error
 
-Ensure your Vault URL is correct and accessible from your application.
+Ensure you call `AddVault()` before building the application:
 
-### "Authentication failed" error
+```csharp
+builder.Services.AddVault(builder.Configuration, vaultOptions, environment: "production");
+var app = builder.Build();
+```
 
-Verify your authentication credentials:
-- **Local**: Check token file exists and contains valid token
-- **AWS IAM**: Verify IAM role has proper permissions and Vault role configuration
-- **Custom**: Ensure custom auth method info is correctly configured
+### Secrets not appearing in IConfiguration
 
-### Secrets not appearing in configuration
+1. Verify you called `app.UseVault()` after building
+2. Check the environment parameter matches your Vault path
+3. Ensure secrets exist at `{MountPoint}/data/{environment}/` (KV v2)
+4. Verify authentication and permissions
 
-Check that:
-1. The `environment` parameter matches your Vault path
-2. Secrets exist at `{MountPoint}/{environment}`
-3. The authenticated identity has read permissions on the secrets path
+### Authentication failures
+
+- **Local**: Check token file exists, is readable, and contains a valid token
+  ```bash
+  cat ~/.vault-token
+  vault token lookup
+  ```
+
+- **AWS IAM**: Ensure the EC2/ECS instance has the correct IAM role attached
+  ```bash
+  curl http://169.254.169.254/latest/meta-data/iam/security-credentials/
+  ```
+
+- **AppRole**: Verify role-id and secret-id are correct
+  ```bash
+  vault write auth/approle/login role_id="..." secret_id="..."
+  ```
 
 ### SSL certificate errors
 
-For development only, you can disable SSL validation:
+For production, ensure proper certificates. For development:
+
 ```csharp
-IgnoreSslErrors = true // Not recommended for production
+IgnoreSslErrors = builder.Environment.IsDevelopment()
 ```
 
-For production, ensure proper SSL certificates are configured on your Vault server.
+Or configure your system to trust the Vault CA certificate.
+
+### "Unable to load service index" or connection errors
+
+- Verify Vault URL is accessible from your application
+- Check firewall rules and network connectivity
+- Ensure Vault is running:
+  ```bash
+  vault status
+  ```
+
+## Next Steps
+
+- Learn about all [Features](features.md) and advanced capabilities
+- See example projects in the GitHub repository

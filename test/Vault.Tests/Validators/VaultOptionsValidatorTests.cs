@@ -1,11 +1,10 @@
 // Copyright (c) Bouygues Telecom. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using FluentAssertions;
-using FluentValidation.TestHelper;
 using NSubstitute;
 using Vault.Enum;
 using Vault.Options;
+using Vault.Options.Configuration;
 using Vault.Validators;
 using VaultSharp.V1.AuthMethods;
 using Xunit;
@@ -17,376 +16,364 @@ namespace Vault.Tests.Validators;
 /// </summary>
 public class VaultOptionsValidatorTests
 {
-    private readonly VaultOptionsValidator validator;
-
-    public VaultOptionsValidatorTests()
+    [Fact]
+    public void Validate_WhenVaultOptionsIsNull_ThrowsArgumentNullException()
     {
-        this.validator = new VaultOptionsValidator();
+        // Arrange
+        VaultOptions? vaultOptions = null;
+
+        // Act & Assert
+        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(() => VaultOptionsValidator.Validate(vaultOptions!));
+        Assert.Equal(nameof(vaultOptions), exception.ParamName);
     }
 
     [Fact]
-    public void Should_Have_Error_When_AuthenticationType_Is_None()
+    public void Validate_WhenVaultIsNotActivated_DoesNotThrow()
     {
         // Arrange
-        var options = new VaultOptions
+        var vaultOptions = new VaultOptions
         {
+            IsActivated = false,
+            AuthenticationType = VaultAuthenticationType.None,
+        };
+
+        // Act & Assert - should not throw
+        VaultOptionsValidator.Validate(vaultOptions);
+    }
+
+    [Fact]
+    public void Validate_WhenAuthenticationTypeIsNone_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
             AuthenticationType = VaultAuthenticationType.None,
             Configuration = new VaultDefaultConfiguration
             {
                 VaultUrl = "https://vault.example.com",
-                MountPoint = "kv",
+                MountPoint = "secret",
             },
         };
 
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.ShouldHaveValidationErrorFor(x => x.AuthenticationType)
-            .WithErrorMessage(VaultOptionsResources.VaultAuthenticationType_Not_In_Range);
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("AuthenticationType", exception.Message);
+        Assert.Contains("cannot be 'None'", exception.Message);
     }
 
     [Fact]
-    public void Should_Have_Error_When_Configuration_Is_Null()
+    public void Validate_WhenConfigurationIsNull_ThrowsInvalidOperationException()
     {
         // Arrange
-        var options = new VaultOptions
+        var vaultOptions = new VaultOptions
         {
+            IsActivated = true,
             AuthenticationType = VaultAuthenticationType.Local,
-            Configuration = null,
+            Configuration = null!,
         };
 
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.ShouldHaveValidationErrorFor(x => x.Configuration)
-            .WithErrorMessage(VaultOptionsResources.Vault_Configuration_Undefined);
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("Configuration is missing", exception.Message);
     }
 
     [Fact]
-    public void Should_Have_Error_When_Local_Auth_With_Wrong_Configuration_Type()
+    public void Validate_WhenVaultUrlIsEmpty_ThrowsInvalidOperationException()
     {
         // Arrange
-        var options = new VaultOptions
+        var vaultOptions = new VaultOptions
         {
-            AuthenticationType = VaultAuthenticationType.Local,
-            Configuration = new VaultAwsConfiguration // Mauvais type
-            {
-                VaultUrl = "https://vault.example.com",
-                MountPoint = "kv",
-                Environment = "thomas",
-            },
-        };
-
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.ShouldHaveValidationErrorFor(x => x.Configuration)
-            .WithErrorMessage(VaultOptionsResources.Configuration_Local_CheckType);
-    }
-
-    [Fact]
-    public void Should_Not_Have_Error_When_Local_Auth_Is_Valid()
-    {
-        // Arrange
-        var options = new VaultOptions
-        {
-            AuthenticationType = VaultAuthenticationType.Local,
-            Configuration = new VaultLocalConfiguration
-            {
-                VaultUrl = "https://vault.example.com",
-                MountPoint = "kv",
-                TokenFilePath = "%USERPROFILE%\\.vault-token",
-            },
-        };
-
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.ShouldNotHaveAnyValidationErrors();
-    }
-
-    [Fact]
-    public void Should_Not_Have_Error_When_Local_Auth_Without_TokenFilePath()
-    {
-        // Arrange - TokenFilePath n'est plus requis
-        var options = new VaultOptions
-        {
-            AuthenticationType = VaultAuthenticationType.Local,
-            Configuration = new VaultLocalConfiguration
-            {
-                VaultUrl = "https://vault.example.com",
-                MountPoint = "kv",
-                TokenFilePath = string.Empty,
-            },
-        };
-
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.ShouldNotHaveAnyValidationErrors();
-    }
-
-    [Fact]
-    public void Should_Have_Error_When_AWS_Auth_With_Wrong_Configuration_Type()
-    {
-        // Arrange
-        var options = new VaultOptions
-        {
-            AuthenticationType = VaultAuthenticationType.AWS_IAM,
-            Configuration = new VaultLocalConfiguration // Mauvais type
-            {
-                VaultUrl = "https://vault.example.com",
-                MountPoint = "kv",
-            },
-        };
-
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.ShouldHaveValidationErrorFor(x => x.Configuration)
-            .WithErrorMessage(VaultOptionsResources.Configuration_AWS_IAM_CheckType);
-    }
-
-    [Fact]
-    public void Should_Not_Have_Error_When_AWS_Auth_Is_Valid_With_Explicit_Role()
-    {
-        // Arrange
-        var options = new VaultOptions
-        {
-            AuthenticationType = VaultAuthenticationType.AWS_IAM,
-            Configuration = new VaultAwsConfiguration
-            {
-                VaultUrl = "https://vault.example.com",
-                MountPoint = "kv",
-                Environment = "thomas",
-                AwsIamRoleName = "my-custom-role",
-                AwsAuthMountPoint = "aws",
-            },
-        };
-
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.ShouldNotHaveAnyValidationErrors();
-    }
-
-    [Fact]
-    public void Should_Not_Have_Error_When_AWS_Auth_Is_Valid_Without_Role()
-    {
-        // Arrange - AwsIamRoleName n'est plus requis
-        var options = new VaultOptions
-        {
-            AuthenticationType = VaultAuthenticationType.AWS_IAM,
-            Configuration = new VaultAwsConfiguration
-            {
-                VaultUrl = "https://vault.example.com",
-                MountPoint = "HELLOWORLD-FORMATION",
-                Environment = "thomas",
-                AwsAuthMountPoint = "aws",
-            },
-        };
-
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.ShouldNotHaveAnyValidationErrors();
-    }
-
-    [Fact]
-    public void Should_Have_Error_When_AWS_Auth_Missing_Environment()
-    {
-        // Arrange - Environment est toujours requis
-        var options = new VaultOptions
-        {
-            AuthenticationType = VaultAuthenticationType.AWS_IAM,
-            Configuration = new VaultAwsConfiguration
-            {
-                VaultUrl = "https://vault.example.com",
-                MountPoint = "HELLOWORLD-FORMATION",
-                Environment = string.Empty, // Requis
-                AwsAuthMountPoint = "aws",
-            },
-        };
-
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.Errors.Should().Contain(e => e.ErrorMessage.Contains("Environment"));
-    }
-
-    [Fact]
-    public void Should_Have_Error_When_Custom_Auth_Without_CustomAuthMethodInfo()
-    {
-        // Arrange
-        var options = new VaultOptions
-        {
-            AuthenticationType = VaultAuthenticationType.Custom,
-            Configuration = new VaultDefaultConfiguration
-            {
-                VaultUrl = "https://vault.example.com",
-                MountPoint = "kv",
-            },
-            CustomAuthMethodInfo = null,
-        };
-
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.ShouldHaveValidationErrorFor(x => x.CustomAuthMethodInfo)
-            .WithErrorMessage(VaultOptionsResources.Vault_CustomAuthMethodInfo_Undefined);
-    }
-
-    [Fact]
-    public void Should_Have_Error_When_Custom_Auth_With_Wrong_Configuration_Type()
-    {
-        // Arrange
-        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
-
-        var options = new VaultOptions
-        {
-            AuthenticationType = VaultAuthenticationType.Custom,
-            Configuration = new VaultLocalConfiguration // Doit �tre VaultDefaultConfiguration
-            {
-                VaultUrl = "https://vault.example.com",
-                MountPoint = "kv",
-            },
-            CustomAuthMethodInfo = mockAuthMethod,
-        };
-
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.ShouldHaveValidationErrorFor(x => x.Configuration)
-            .WithErrorMessage(VaultOptionsResources.Configuration_CUSTOM_CheckType);
-    }
-
-    [Fact]
-    public void Should_Not_Have_Error_When_Custom_Auth_Is_Valid()
-    {
-        // Arrange
-        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
-
-        var options = new VaultOptions
-        {
-            AuthenticationType = VaultAuthenticationType.Custom,
-            Configuration = new VaultDefaultConfiguration
-            {
-                VaultUrl = "https://vault.example.com",
-                MountPoint = "kv",
-            },
-            CustomAuthMethodInfo = mockAuthMethod,
-        };
-
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.ShouldNotHaveAnyValidationErrors();
-    }
-
-    [Fact]
-    public void Should_Have_Error_When_Custom_Auth_With_AwsConfiguration()
-    {
-        // Arrange
-        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
-
-        var options = new VaultOptions
-        {
-            AuthenticationType = VaultAuthenticationType.Custom,
-            Configuration = new VaultAwsConfiguration // Ne doit pas �tre un type d�riv�
-            {
-                VaultUrl = "https://vault.example.com",
-                MountPoint = "kv",
-                Environment = "thomas",
-            },
-            CustomAuthMethodInfo = mockAuthMethod,
-        };
-
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.ShouldHaveValidationErrorFor(x => x.Configuration);
-    }
-
-    [Fact]
-    public void Should_Validate_Complete_Local_Configuration()
-    {
-        // Arrange
-        var options = new VaultOptions
-        {
-            AuthenticationType = VaultAuthenticationType.Local,
-            Configuration = new VaultLocalConfiguration
-            {
-                VaultUrl = "https://vault.production.com:8200",
-                MountPoint = "HELLOWORLD-FORMATION",
-                TokenFilePath = "C:\\Users\\thomas\\.vault-token",
-                IgnoreSslErrors = false,
-            },
-        };
-
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.ShouldNotHaveAnyValidationErrors();
-    }
-
-    [Fact]
-    public void Should_Validate_Complete_AWS_Configuration()
-    {
-        // Arrange
-        var options = new VaultOptions
-        {
-            AuthenticationType = VaultAuthenticationType.AWS_IAM,
-            Configuration = new VaultAwsConfiguration
-            {
-                VaultUrl = "https://vault.production.com:8200",
-                MountPoint = "HELLOWORLD-FORMATION",
-                Environment = "production",
-                AwsAuthMountPoint = "aws",
-                IgnoreSslErrors = false,
-            },
-        };
-
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
-
-        // Assert
-        result.ShouldNotHaveAnyValidationErrors();
-    }
-
-    [Fact]
-    public void Should_Collect_Multiple_Validation_Errors()
-    {
-        // Arrange
-        var options = new VaultOptions
-        {
+            IsActivated = true,
             AuthenticationType = VaultAuthenticationType.Local,
             Configuration = new VaultLocalConfiguration
             {
                 VaultUrl = string.Empty,
+                MountPoint = "secret",
+                TokenFilePath = "/path/to/token",
+            },
+        };
+
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("VaultUrl", exception.Message);
+        Assert.Contains("missing", exception.Message);
+    }
+
+    [Fact]
+    public void Validate_WhenVaultUrlIsWhitespace_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Local,
+            Configuration = new VaultLocalConfiguration
+            {
+                VaultUrl = "   ",
+                MountPoint = "secret",
+                TokenFilePath = "/path/to/token",
+            },
+        };
+
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("VaultUrl", exception.Message);
+        Assert.Contains("missing", exception.Message);
+    }
+
+    [Fact]
+    public void Validate_WhenMountPointIsEmpty_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Local,
+            Configuration = new VaultLocalConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
                 MountPoint = string.Empty,
+                TokenFilePath = "/path/to/token",
+            },
+        };
+
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("MountPoint", exception.Message);
+        Assert.Contains("missing", exception.Message);
+    }
+
+    [Fact]
+    public void Validate_WhenMountPointIsNull_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Local,
+            Configuration = new VaultLocalConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = null!,
+                TokenFilePath = "/path/to/token",
+            },
+        };
+
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("MountPoint", exception.Message);
+        Assert.Contains("missing", exception.Message);
+    }
+
+    [Fact]
+    public void Validate_WhenLocalAuthWithValidConfiguration_DoesNotThrow()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Local,
+            Configuration = new VaultLocalConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+                TokenFilePath = "%USERPROFILE%\\.vault-token",
+            },
+        };
+
+        // Act & Assert - should not throw
+        VaultOptionsValidator.Validate(vaultOptions);
+    }
+
+    [Fact]
+    public void Validate_WhenLocalAuthWithWrongConfigurationType_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Local,
+            Configuration = new VaultDefaultConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+            },
+        };
+
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("VaultLocalConfiguration", exception.Message);
+        Assert.Contains("Local authentication", exception.Message);
+    }
+
+    [Fact]
+    public void Validate_WhenLocalAuthWithEmptyTokenFilePath_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Local,
+            Configuration = new VaultLocalConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
                 TokenFilePath = string.Empty,
             },
         };
 
-        // Act
-        TestValidationResult<VaultOptions> result = this.validator.TestValidate(options);
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("TokenFilePath", exception.Message);
+        Assert.Contains("missing", exception.Message);
+    }
 
-        // Assert
-        result.Errors.Should().HaveCountGreaterThan(0);
-        result.IsValid.Should().BeFalse();
+    [Fact]
+    public void Validate_WhenLocalAuthWithNullTokenFilePath_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Local,
+            Configuration = new VaultLocalConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+                TokenFilePath = null!,
+            },
+        };
+
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("TokenFilePath", exception.Message);
+        Assert.Contains("missing", exception.Message);
+    }
+
+    [Fact]
+    public void Validate_WhenAwsIamAuthWithValidConfiguration_DoesNotThrow()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.AWS_IAM,
+            Configuration = new VaultAwsIAMConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+                AwsIamRoleName = "my-role",
+                Environment = "prod",
+            },
+        };
+
+        // Act & Assert - should not throw
+        VaultOptionsValidator.Validate(vaultOptions);
+    }
+
+    [Fact]
+    public void Validate_WhenAwsIamAuthWithWrongConfigurationType_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.AWS_IAM,
+            Configuration = new VaultDefaultConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+            },
+        };
+
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("VaultAwsIAMConfiguration", exception.Message);
+        Assert.Contains("AWS_IAM authentication", exception.Message);
+    }
+
+    [Fact]
+    public void Validate_WhenAwsIamAuthWithMinimalConfiguration_DoesNotThrow()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.AWS_IAM,
+            Configuration = new VaultAwsIAMConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+            },
+        };
+
+        // Act & Assert - should not throw
+        VaultOptionsValidator.Validate(vaultOptions);
+    }
+
+    [Fact]
+    public void Validate_WhenCustomAuthWithValidConfiguration_DoesNotThrow()
+    {
+        // Arrange
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Custom,
+            Configuration = new VaultCustomConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+                AuthMethodFactory = () => mockAuthMethod,
+            },
+        };
+
+        // Act & Assert - should not throw
+        VaultOptionsValidator.Validate(vaultOptions);
+    }
+
+    [Fact]
+    public void Validate_WhenCustomAuthWithWrongConfigurationType_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Custom,
+            Configuration = new VaultDefaultConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+            },
+        };
+
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("VaultCustomConfiguration", exception.Message);
+        Assert.Contains("Custom authentication", exception.Message);
+    }
+
+    [Fact]
+    public void Validate_WhenCustomAuthWithNullFactory_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Custom,
+            Configuration = new VaultCustomConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+                AuthMethodFactory = null,
+            },
+        };
+
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("AuthMethodFactory", exception.Message);
+        Assert.Contains("must be provided", exception.Message);
     }
 }

@@ -1,24 +1,23 @@
-﻿namespace Vault.Abstractions;
+namespace Vault.Abstractions;
 
 /// <summary>
-/// Service for interacting with HashiCorp Vault.
+/// Defines methods for retrieving environments and secrets from a key-value vault service.
 /// </summary>
+/// <remarks>Implementations of this interface provide asynchronous access to secrets organized by environment.
+/// Methods support retrieving all environments, all secrets for a specific environment, individual secret values, and
+/// nested secret values using dot notation. This interface is intended for use in applications that require secure,
+/// environment-based secret management.</remarks>
 public interface IVaultService
 {
     /// <summary>
-    /// Lists all available environments in the Vault KV.
+    /// Lists all available environments in the KV Vault.
     /// </summary>
-    /// <returns>The list of environment names.</returns>
-    /// <exception cref="Exceptions.VaultException">When an error occurs during communication with Vault.</exception>
     Task<IEnumerable<string>> ListEnvironmentsAsync();
 
     /// <summary>
     /// Retrieves all secrets for a given environment.
     /// </summary>
     /// <param name="environment">The environment name (e.g., DEV, PROD).</param>
-    /// <returns>A dictionary containing all secrets (key/value pairs).</returns>
-    /// <exception cref="ArgumentException">If the environment is empty or null.</exception>
-    /// <exception cref="Exceptions.VaultException">When an error occurs during communication with Vault.</exception>
     Task<Dictionary<string, object>> GetSecretsAsync(string environment);
 
     /// <summary>
@@ -26,8 +25,16 @@ public interface IVaultService
     /// </summary>
     /// <param name="environment">The environment name.</param>
     /// <param name="key">The secret key.</param>
-    /// <returns>The secret value, or null if the key does not exist.</returns>
-    /// <exception cref="ArgumentException">If the environment or key is empty or null.</exception>
-    /// <exception cref="Exceptions.VaultException">When an error occurs during communication with Vault.</exception>
     Task<object?> GetSecretValueAsync(string environment, string key);
+
+    /// <summary>
+    /// Retrieves a nested secret value using dot notation.
+    /// </summary>
+    /// <param name="environment">The environment name.</param>
+    /// <param name="path">The secret path with dot notation (e.g., "level1.level2.level3").</param>
+    /// <returns>The secret value if found, otherwise null.</returns>
+    /// <example>
+    /// await vaultService.GetNestedSecretValueAsync("thomas", "level1.level2.level3").
+    /// </example>
+    Task<object?> GetNestedSecretValueAsync(string environment, string path);
 }

@@ -1,74 +1,140 @@
-﻿using FluentValidation;
 using Vault.Enum;
 using Vault.Options;
+using Vault.Options.Configuration;
 
 namespace Vault.Validators;
 
 /// <summary>
-/// Provides validation logic for <see cref="VaultOptions"/> instances to ensure that configuration and authentication
-/// settings are valid before use.
+/// Validator for VaultOptions configuration
+/// Ensures all required settings are properly configured based on the authentication type.
 /// </summary>
-/// <remarks>This validator enforces required fields and checks that the configuration type matches the selected
-/// authentication method. It should be used to validate <see cref="VaultOptions"/> objects prior to initializing
-/// Vault-related services. Validation failures will provide descriptive error messages for each invalid
-/// property.</remarks>
-public class VaultOptionsValidator
-    : AbstractValidator<VaultOptions>
+public static class VaultOptionsValidator
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="VaultOptionsValidator"/> class.
+    /// Validates VaultOptions and throws InvalidOperationException if validation fails.
     /// </summary>
-    public VaultOptionsValidator()
+    /// <param name="vaultOptions">The VaultOptions to validate.</param>
+    /// <exception cref="ArgumentNullException">Thrown when vaultOptions is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when validation fails.</exception>
+    public static void Validate(VaultOptions vaultOptions)
     {
-        RuleFor(x => x.AuthenticationType)
-            .NotEqual(VaultAuthenticationType.None)
-            .WithMessage(VaultOptionsResources.VaultAuthenticationType_Not_In_Range);
-
-        RuleFor(x => x.Configuration)
-            .NotNull()
-            .WithMessage(VaultOptionsResources.Vault_Configuration_Undefined);
-
-        When(x => x.AuthenticationType == VaultAuthenticationType.Local, () =>
+        if (vaultOptions == null)
         {
-            RuleFor(x => x.Configuration)
-                .Must(config => config is VaultLocalConfiguration)
-                .WithMessage(VaultOptionsResources.Configuration_Local_CheckType);
+            throw new ArgumentNullException(nameof(vaultOptions));
+        }
 
-            When(x => x.Configuration is VaultLocalConfiguration, () =>
-            {
-                RuleFor(x => (VaultLocalConfiguration)x.Configuration!)
-                    .SetValidator(new VaultLocalConfigurationValidator());
-            });
-        });
-
-        When(x => x.AuthenticationType == VaultAuthenticationType.AWS_IAM, () =>
+        // If Vault is not activated, skip validation
+        if (!vaultOptions.IsActivated)
         {
-            RuleFor(x => x.Configuration)
-                .Must(config => config is VaultAwsConfiguration)
-                .WithMessage(VaultOptionsResources.Configuration_AWS_IAM_CheckType);
+            return;
+        }
 
-            When(x => x.Configuration is VaultAwsConfiguration, () =>
-            {
-                RuleFor(x => (VaultAwsConfiguration)x.Configuration!)
-                    .SetValidator(new VaultAwsConfigurationValidator());
-            });
-        });
-
-        When(x => x.AuthenticationType == VaultAuthenticationType.Custom, () =>
+        // Validate authentication type is set
+        if (vaultOptions.AuthenticationType == VaultAuthenticationType.None)
         {
-            RuleFor(x => x.CustomAuthMethodInfo)
-                .NotNull()
-                .WithMessage(VaultOptionsResources.Vault_CustomAuthMethodInfo_Undefined);
+            throw new InvalidOperationException(
+                "Vault:AuthenticationType configuration cannot be 'None' when Vault is activated");
+        }
 
-            RuleFor(x => x.Configuration)
-                .Must(config => config != null && config.GetType() == typeof(VaultDefaultConfiguration))
-                .WithMessage(VaultOptionsResources.Configuration_CUSTOM_CheckType);
+        var config = vaultOptions.Configuration;
 
-            When(x => x.Configuration != null && x.Configuration.GetType() == typeof(VaultDefaultConfiguration), () =>
-            {
-                RuleFor(x => x.Configuration)
-                    .SetValidator(new VaultDefaultConfigurationValidator()!);
-            });
-        });
+        // Validate common configuration
+        ValidateCommonConfiguration(config);
+
+        // Validate specific authentication configuration
+        switch (vaultOptions.AuthenticationType)
+        {
+            case VaultAuthenticationType.Local:
+                ValidateLocalConfiguration(config);
+                break;
+
+            case VaultAuthenticationType.AWS_IAM:
+                ValidateAwsIamConfiguration(config);
+                break;
+
+            case VaultAuthenticationType.Custom:
+                ValidateCustomConfiguration(config);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Validates common configuration properties required by all authentication types.
+    /// </summary>
+    private static void ValidateCommonConfiguration(VaultDefaultConfiguration config)
+    {
+        if (config == null)
+        {
+            throw new InvalidOperationException(
+                "Vault:Configuration is missing. Ensure VaultOptions.Configuration is properly set.");
+        }
+
+        if (string.IsNullOrWhiteSpace(config.VaultUrl))
+        {
+            throw new InvalidOperationException(
+                "Vault:Configuration:VaultUrl configuration is missing");
+        }
+
+        if (string.IsNullOrWhiteSpace(config.MountPoint))
+        {
+            throw new InvalidOperationException(
+                "Vault:Configuration:MountPoint configuration is missing");
+        }
+    }
+
+    /// <summary>
+    /// Validates configuration for Local authentication.
+    /// </summary>
+    private static void ValidateLocalConfiguration(VaultDefaultConfiguration config)
+    {
+        if (config is not VaultLocalConfiguration localConfig)
+        {
+            throw new InvalidOperationException(
+                "Configuration must be of type VaultLocalConfiguration for Local authentication. " +
+                "Create a VaultLocalConfiguration instance and assign it to VaultOptions.Configuration.");
+        }
+
+        if (string.IsNullOrWhiteSpace(localConfig.TokenFilePath))
+        {
+            throw new InvalidOperationException(
+                "Vault:Configuration:TokenFilePath configuration is missing for Local authentication. " +
+                "Default convention: %USERPROFILE%\\.vault-token");
+        }
+    }
+
+    /// <summary>
+    /// Validates configuration for AWS IAM authentication.
+    /// </summary>
+    private static void ValidateAwsIamConfiguration(VaultDefaultConfiguration config)
+    {
+        if (config is not VaultAwsIAMConfiguration awsConfig)
+        {
+            throw new InvalidOperationException(
+                "Configuration must be of type VaultAwsIAMConfiguration for AWS_IAM authentication. " +
+                "Create a VaultAwsIAMConfiguration instance and assign it to VaultOptions.Configuration.");
+        }
+
+        // Optional: Add specific AWS IAM validation if needed
+        // For example, validate that either AwsIamRoleName is set OR both MountPoint and Environment are set
+    }
+
+    /// <summary>
+    /// Validates configuration for Custom authentication.
+    /// </summary>
+    private static void ValidateCustomConfiguration(VaultDefaultConfiguration config)
+    {
+        if (config is not VaultCustomConfiguration customConfig)
+        {
+            throw new InvalidOperationException(
+                "Configuration must be of type VaultCustomConfiguration for Custom authentication. " +
+                "Create a VaultCustomConfiguration instance and assign it to VaultOptions.Configuration.");
+        }
+
+        if (customConfig.AuthMethodFactory == null)
+        {
+            throw new InvalidOperationException(
+                "AuthMethodFactory factory must be provided for Custom authentication. " +
+                "Define VaultOptions.Configuration.AuthMethodFactory with a function that returns your custom IAuthMethodInfo.");
+        }
     }
 }

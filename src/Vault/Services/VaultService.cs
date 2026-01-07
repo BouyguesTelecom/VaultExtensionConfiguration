@@ -1,7 +1,7 @@
+ï»¿using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Vault.Abstractions;
-using Vault.Exceptions;
-using Vault.Internal;
+using Vault.Helpers;
 using Vault.Options;
 using VaultSharp;
 using VaultSharp.V1.SecretsEngines;
@@ -9,179 +9,184 @@ using VaultSharp.V1.SecretsEngines;
 namespace Vault.Services;
 
 /// <summary>
-/// Provides access to HashiCorp Vault secrets and environments using configured authentication and connection options.
+/// Implementation of <see cref="IVaultService"/> that provides access to HashiCorp Vault secrets.
 /// </summary>
-/// <remarks>VaultService manages the connection to a Vault server, handles authentication, and exposes methods to
-/// list environments and retrieve secrets. The service is intended for use in applications that require secure access
-/// to secrets stored in Vault. Thread safety is ensured for typical usage scenarios. For production environments,
-/// ensure SSL validation is enabled to maintain secure communication with the Vault server.</remarks>
 public class VaultService
     : IVaultService
 {
     private readonly IVaultClient _vaultClient;
     private readonly VaultOptions _options;
-    private readonly ILogger<VaultService> _logger;
+    private readonly ILogger _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="VaultService"/> class.
     /// </summary>
-    /// <param name="options">Options de configuration Vault.</param>
-    /// <param name="logger">Logger pour les diagnostics.</param>
-    /// <exception cref="ArgumentNullException">Si options ou logger est null.</exception>
-    /// <exception cref="VaultConfigurationException">Si la configuration est invalide.</exception>
-    /// <exception cref="VaultAuthenticationException">Si l'authentification échoue.</exception>
+    /// <param name="options">The Vault configuration options.</param>
+    /// <param name="logger">The logger instance.</param>
     public VaultService(
         VaultOptions options,
         ILogger<VaultService> logger)
     {
-        this._options = options ?? throw new ArgumentNullException(nameof(options));
-        this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        if (!options.IsActivated)
+        {
+            throw new InvalidOperationException("Vault service is not activated. Check Vault:IsActivated configuration.");
+        }
 
         try
         {
             var authMethod = options.CreateAuthMethod();
             var config = options.GetConfiguration();
 
-            var vaultClientSettings = new VaultClientSettings(config.VaultUrl, authMethod)
-            {
-                SecretsEngineMountPoints = new SecretsEngineMountPoints
-                {
-                    KeyValueV2 = config.MountPoint,
-                },
-            };
-
-            // Configuration SSL
+            HttpClient? httpClient = null;
             if (config.IgnoreSslErrors)
             {
-                _logger.LogWarning(
-                    "Les erreurs SSL sont ignorées pour Vault. Cette configuration ne devrait PAS être utilisée en production.");
-
                 var httpClientHandler = new HttpClientHandler
                 {
                     ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
                 };
-                var httpClient = new HttpClient(httpClientHandler);
+                httpClient = new HttpClient(httpClientHandler);
+            }
+
+            var vaultClientSettings = new VaultClientSettings(config.VaultUrl, authMethod)
+            {
+                SecretsEngineMountPoints = new SecretsEngineMountPoints
+                {
+                    KeyValueV2 = config.MountPoint
+                }
+            };
+
+            if (httpClient is not null)
+            {
                 vaultClientSettings.MyHttpClientProviderFunc = handler => httpClient;
             }
 
             _vaultClient = new VaultClient(vaultClientSettings);
-
-            _logger.LogInformation(
-                "VaultService initialisé avec succès. Type d'authentification: {AuthType}, URL: {VaultUrl}",
-                options.AuthenticationType,
-                config.VaultUrl);
         }
-        catch (VaultException)
+        catch (Exception ex)
         {
-            // Re-throw les exceptions Vault custom
+            _logger.LogError(ex, "Error initializing VaultService");
             throw;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erreur lors de l'initialisation du VaultService");
-            throw new VaultException("Erreur lors de l'initialisation du service Vault", ex);
-        }
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public async Task<IEnumerable<string>> ListEnvironmentsAsync()
     {
-        try
-        {
-            _logger.LogDebug("Récupération de la liste des environnements Vault");
-            var listResponse = await _vaultClient.V1.Secrets.KeyValue.V2.ReadSecretPathsAsync(path: string.Empty);
-            var environments = listResponse.Data.Keys.ToList();
-
-            _logger.LogDebug("Liste des environnements récupérée: {Count} environnement(s)", environments.Count);
-            return environments;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erreur lors de la récupération de la liste des environnements");
-            throw new VaultException("Erreur lors de la récupération de la liste des environnements", ex);
-        }
+        var listResponse = await _vaultClient.V1.Secrets.KeyValue.V2.ReadSecretPathsAsync(path: string.Empty);
+        return listResponse.Data.Keys.ToList();
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public async Task<Dictionary<string, object>> GetSecretsAsync(string environment)
     {
         if (string.IsNullOrWhiteSpace(environment))
         {
-            throw new ArgumentException("L'environnement ne peut pas être vide", nameof(environment));
+            throw new ArgumentException("Environment cannot be empty", nameof(environment));
         }
 
-        try
+        var secrets = await _vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(path: environment);
+
+        if (secrets?.Data?.Data == null)
         {
-            _logger.LogDebug("Récupération des secrets pour l'environnement: {Environment}", environment);
-            var secrets = await _vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(path: environment);
-
-            if (secrets?.Data?.Data == null)
-            {
-                _logger.LogDebug("Aucun secret trouvé pour l'environnement: {Environment}", environment);
-                return new Dictionary<string, object>();
-            }
-
-            _logger.LogDebug(
-                "Secrets récupérés pour l'environnement {Environment}: {Count} secret(s)",
-                environment,
-                secrets.Data.Data.Count);
-
-            return new Dictionary<string, object>(secrets.Data.Data);
+            return new Dictionary<string, object>();
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erreur lors de la récupération des secrets pour l'environnement: {Environment}", environment);
-            throw new VaultException($"Erreur lors de la récupération des secrets pour l'environnement '{environment}'", ex);
-        }
+
+        return new Dictionary<string, object>(secrets.Data.Data);
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public async Task<object?> GetSecretValueAsync(string environment, string key)
     {
         if (string.IsNullOrWhiteSpace(environment))
         {
-            throw new ArgumentException("L'environnement ne peut pas être vide", nameof(environment));
+            throw new ArgumentException("Environment cannot be empty", nameof(environment));
         }
 
         if (string.IsNullOrWhiteSpace(key))
         {
-            throw new ArgumentException("La clé ne peut pas être vide", nameof(key));
+            throw new ArgumentException("Key cannot be empty", nameof(key));
         }
 
-        try
+        var secrets = await GetSecretsAsync(environment);
+        secrets.TryGetValue(key, out var value);
+
+        return value;
+    }
+
+    /// <inheritdoc/>
+    public async Task<object?> GetNestedSecretValueAsync(string environment, string path)
+    {
+        if (string.IsNullOrWhiteSpace(environment))
         {
-            _logger.LogDebug(
-                "Récupération du secret {Key} pour l'environnement: {Environment}",
-                key,
-                environment);
+            throw new ArgumentException("Environment cannot be empty", nameof(environment));
+        }
 
-            var secrets = await GetSecretsAsync(environment);
-            secrets.TryGetValue(key, out var value);
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            throw new ArgumentException("Path cannot be empty", nameof(path));
+        }
 
-            if (value == null)
+        var secrets = await GetSecretsAsync(environment);
+
+        // Split the path by dots: "level1.level2.level3" -> ["level1", "level2", "level3"]
+        var pathParts = path.Split('.');
+
+        object? currentValue = secrets;
+
+        foreach (var part in pathParts)
+        {
+            // If the current value is not a dictionary, we cannot continue
+            if (currentValue is not Dictionary<string, object> dict)
             {
-                _logger.LogDebug(
-                    "Secret {Key} non trouvé dans l'environnement {Environment}",
-                    key,
-                    environment);
-            }
+                // Try to convert from JsonElement if necessary
+                if (currentValue is JsonElement jsonElement && jsonElement.ValueKind == JsonValueKind.Object)
+                {
+                    if (!jsonElement.TryGetProperty(part, out var jsonProperty))
+                    {
+                        _logger.LogDebug("Property '{Part}' not found in path '{Path}'", part, path);
+                        return null;
+                    }
 
-            return value;
+                    currentValue = ConvertJsonElement(jsonProperty);
+                }
+                else
+                {
+                    _logger.LogDebug("Value at '{Part}' is not a navigable object in path '{Path}'", part, path);
+                    return null;
+                }
+            }
+            else
+            {
+                // Navigate through the dictionary
+                if (!dict.TryGetValue(part, out currentValue))
+                {
+                    _logger.LogDebug("Key '{Part}' not found in path '{Path}'", part, path);
+                    return null;
+                }
+            }
         }
-        catch (ArgumentException)
+
+        return currentValue;
+    }
+
+    /// <summary>
+    /// Convert a JsonElement to a native object.
+    /// </summary>
+    private static object? ConvertJsonElement(JsonElement element)
+    {
+        return element.ValueKind switch
         {
-            // Re-throw les ArgumentException
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(
-                ex,
-                "Erreur lors de la récupération du secret {Key} pour l'environnement: {Environment}",
-                key,
-                environment);
-            throw new VaultException(
-                $"Erreur lors de la récupération du secret '{key}' pour l'environnement '{environment}'", ex);
-        }
+            JsonValueKind.String => element.GetString(),
+            JsonValueKind.Number => element.TryGetInt64(out var l) ? l : element.GetDouble(),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.Null => null,
+            JsonValueKind.Object => JsonSerializer.Deserialize<Dictionary<string, object>>(element.GetRawText()),
+            JsonValueKind.Array => JsonSerializer.Deserialize<object[]>(element.GetRawText()),
+            _ => element.ToString()
+        };
     }
 }

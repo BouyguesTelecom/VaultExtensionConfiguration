@@ -1,32 +1,32 @@
+using System.Text.Json.Serialization;
 using Vault.Enum;
-using VaultSharp.V1.AuthMethods;
+using Vault.Options.Configuration;
 
 namespace Vault.Options;
 
 /// <summary>
-/// Configuration options for the Vault service.
-/// Allows configuring different authentication types (Local, AWS_IAM, or Custom).
+/// Configuration options for the Vault service
+/// Allows configuring different authentication types (Local, AWS_IAM or Custom).
 /// </summary>
 public class VaultOptions
 {
     /// <summary>
-    /// Gets or sets the authentication type (Local, AWS_IAM, or Custom).
+    /// Indicates whether Vault is activated.
     /// </summary>
-    public VaultAuthenticationType AuthenticationType { get; set; } = VaultAuthenticationType.Local;
+    public bool IsActivated { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets the configuration for Vault access.
-    /// Use VaultLocalConfiguration when AuthenticationType = Local.
-    /// Use VaultAwsConfiguration when AuthenticationType = AWS_IAM.
-    /// Use VaultDefaultConfiguration when AuthenticationType = Custom.
+    /// Authentication type (Local, AWS_IAM or Custom).
     /// </summary>
-    public VaultDefaultConfiguration? Configuration { get; set; } = new VaultLocalConfiguration();
+    public VaultAuthenticationType AuthenticationType { get; set; } = VaultAuthenticationType.None;
 
     /// <summary>
-    /// Gets or sets the custom authentication method.
-    /// Used only when AuthenticationType = Custom.
-    /// Allows providing a custom IAuthMethodInfo implementation for authentication methods
-    /// not natively supported (AppRole, LDAP, UserPass, etc.).
+    /// Configuration specific to the authentication type
+    /// The actual instance can be:
+    /// - VaultLocalConfiguration if AuthenticationType = Local
+    /// - VaultAwsIAMConfiguration if AuthenticationType = AWS_IAM
+    /// - VaultCustomConfiguration if AuthenticationType = Custom
+    /// - VaultDefaultConfiguration by default.
     /// </summary>
-    public IAuthMethodInfo? CustomAuthMethodInfo { get; set; }
+    public VaultDefaultConfiguration Configuration { get; set; } = new();
 }
