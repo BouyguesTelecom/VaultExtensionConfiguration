@@ -1,33 +1,29 @@
 namespace Vault.Enum;
 
 /// <summary>
-/// Specifies the authentication method to use when connecting to a Vault server.
+/// Authentication type for Vault
 /// </summary>
-/// <remarks>Use this enumeration to select the appropriate authentication strategy for your Vault client. The
-/// available options include no authentication, local token-based authentication, automatic AWS IAM authentication, or
-/// a custom authentication method. Choose 'Custom' to provide your own implementation for authentication scenarios not
-/// covered by the built-in options.</remarks>
 public enum VaultAuthenticationType
 {
     /// <summary>
     /// Indicates that no options are set.
     /// </summary>
     None = 0,
+    /// <summary>
+    /// Local authentication via token (.vault-token file)
+    /// </summary>
+    Local,
 
     /// <summary>
-    /// Indicates that the resource or operation is local to the current machine or environment.
+    /// Automatic authentication via AWS IAM
+    /// Uses available AWS credentials (environment variables, EC2 instance profile, ECS task role, etc.)
+    /// Requires Vault role configuration with auth_type=iam and an appropriate bound_iam_principal_arn
     /// </summary>
-    Local = 10,
+    AWS_IAM,
 
     /// <summary>
-    /// Specifies the Amazon Web Services Identity and Access Management (IAM) authentication provider.
+    /// Custom authentication via a custom IAuthMethodInfo implementation
+    /// Allows providing your own authentication strategy
     /// </summary>
-    AWS_IAM = 20,
-
-    /// <summary>
-    /// Specifies a custom log level with a user-defined value.
-    /// </summary>
-    /// <remarks>Use this value to represent a log level that does not correspond to any of the predefined levels. The
-    /// numeric value can be used to distinguish custom log levels from standard ones.</remarks>
-    Custom = 100
+    Custom
 }

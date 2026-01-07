@@ -1,24 +1,24 @@
-namespace Vault.Options;
+namespace Vault.Options.Configuration;
 
 /// <summary>
-/// Configuration de base pour l'accès à Vault.
-/// Contient les paramètres communs à tous les types d'authentification.
+/// Base configuration for Vault access
+/// Contains parameters common to all authentication types
 /// </summary>
 public class VaultDefaultConfiguration
 {
     /// <summary>
-    /// URL du serveur Vault.
+    /// Vault server URL
     /// </summary>
     public string VaultUrl { get; set; } = string.Empty;
 
     /// <summary>
-    /// Mount point du KV v2 dans Vault.
+    /// KV v2 mount point in Vault
     /// </summary>
     public string MountPoint { get; set; } = string.Empty;
 
     /// <summary>
-    /// Indique si les erreurs SSL doivent être ignorées.
-    /// À désactiver en production pour des raisons de sécurité.
+    /// Indicates whether SSL errors should be ignored
+    /// Should be disabled in production for security reasons
     /// </summary>
     public bool IgnoreSslErrors { get; set; } = true;
 }
