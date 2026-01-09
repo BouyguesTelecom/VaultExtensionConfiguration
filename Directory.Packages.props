@@ -10,11 +10,13 @@
     <!-- Put repo-specific PackageVersion items in this group. -->
     <PackageVersion Include="AWSSDK.Core" Version="4.0.3.4" />
     <PackageVersion Include="AWSSDK.SecurityToken" Version="4.0.5.1" />
-    <PackageVersion Include="AwsSignatureVersion4" Version="5.0.1" />
+    <!-- AwsSignatureVersion4 library not used - We use our custom AwsSigV4Helper implementation instead.
+         Reasons: Simpler API tailored for Vault IAM Auth, no heavy AWSSDK dependencies, fully tested for our use case. -->
+    <!-- <PackageVersion Include="AwsSignatureVersion4" Version="5.0.1" /> -->
     <PackageVersion Include="VaultSharp" Version="1.17.5.1" />
 
 
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
