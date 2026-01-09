@@ -12,7 +12,8 @@
   <ItemGroup>
     <PackageReference Include="AWSSDK.Core" />
     <PackageReference Include="AWSSDK.SecurityToken" />
-    <PackageReference Include="AwsSignatureVersion4" />
+    <!-- AwsSignatureVersion4 library not used - We use our custom AwsSigV4Helper implementation instead. -->
+    <!-- <PackageReference Include="AwsSignatureVersion4" /> -->
     <PackageReference Include="VaultSharp" />
     <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
@@ -41,5 +42,5 @@
     </EmbeddedResource>
   </ItemGroup>
 
- 
+
 </Project>
