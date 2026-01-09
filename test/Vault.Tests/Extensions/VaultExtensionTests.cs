@@ -1,0 +1,193 @@
+// Copyright (c) Bouygues Telecom. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
+using Vault.Abstractions;
+using Vault.Enum;
+using Vault.Extentions;
+using Vault.Options;
+using Vault.Options.Configuration;
+using VaultSharp.V1.AuthMethods;
+using Xunit;
+
+namespace Vault.Tests.Extensions;
+
+/// <summary>
+/// Unit tests for VaultExtension.
+/// </summary>
+public class VaultExtensionTests
+{
+    [Fact]
+    public void AddVault_WithNullServices_ThrowsArgumentNullException()
+    {
+        // Arrange
+        IServiceCollection? services = null;
+        var configuration = new ConfigurationBuilder();
+        var vaultOptions = new VaultOptions { IsActivated = false };
+        var environment = "dev";
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            services!.AddVault(configuration, vaultOptions, environment));
+        Assert.Equal(nameof(services), exception.ParamName);
+    }
+
+    [Fact]
+    public void AddVault_WithNullConfiguration_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        IConfigurationBuilder? configuration = null;
+        var vaultOptions = new VaultOptions { IsActivated = false };
+        var environment = "dev";
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            services.AddVault(configuration!, vaultOptions, environment));
+        Assert.Equal(nameof(configuration), exception.ParamName);
+    }
+
+    [Fact]
+    public void AddVault_WithNullVaultOptions_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder();
+        VaultOptions? vaultOptions = null;
+        var environment = "dev";
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            services.AddVault(configuration, vaultOptions!, environment));
+        Assert.Equal(nameof(vaultOptions), exception.ParamName);
+    }
+
+    [Fact]
+    public void AddVault_WithEmptyEnvironment_ThrowsArgumentException()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder();
+        var vaultOptions = new VaultOptions { IsActivated = false };
+        var environment = string.Empty;
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentException>(() =>
+            services.AddVault(configuration, vaultOptions, environment));
+        Assert.Equal(nameof(environment), exception.ParamName);
+        Assert.Contains("cannot be empty", exception.Message);
+    }
+
+    [Fact]
+    public void AddVault_WithWhitespaceEnvironment_ThrowsArgumentException()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder();
+        var vaultOptions = new VaultOptions { IsActivated = false };
+        var environment = "   ";
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentException>(() =>
+            services.AddVault(configuration, vaultOptions, environment));
+        Assert.Equal(nameof(environment), exception.ParamName);
+    }
+
+    [Fact]
+    public void AddVault_WithInactivatedVault_RegistersOptionsOnly()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder();
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = false,
+            AuthenticationType = VaultAuthenticationType.None,
+        };
+        var environment = "dev";
+
+        // Act
+        services.AddVault(configuration, vaultOptions, environment);
+        var serviceProvider = services.BuildServiceProvider();
+
+        // Assert
+        var registeredOptions = serviceProvider.GetService<VaultOptions>();
+        Assert.NotNull(registeredOptions);
+        Assert.Same(vaultOptions, registeredOptions);
+
+        // VaultService should not be registered
+        var vaultService = serviceProvider.GetService<IVaultService>();
+        Assert.Null(vaultService);
+    }
+
+    [Fact]
+    public void AddVault_WithValidConfiguration_RegistersVaultOptions()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder();
+        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Custom,
+            Configuration = new VaultCustomConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+                AuthMethodFactory = () => mockAuthMethod,
+            },
+        };
+        var environment = "dev";
+
+        // Act
+        services.AddVault(configuration, vaultOptions, environment);
+        var serviceProvider = services.BuildServiceProvider();
+
+        // Assert
+        var registeredOptions = serviceProvider.GetService<VaultOptions>();
+        Assert.NotNull(registeredOptions);
+        Assert.Same(vaultOptions, registeredOptions);
+    }
+
+    [Fact]
+    public void AddVault_WithInvalidConfiguration_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder();
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.None,
+            Configuration = new VaultDefaultConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+            },
+        };
+        var environment = "dev";
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() =>
+            services.AddVault(configuration, vaultOptions, environment));
+    }
+
+    [Fact]
+    public void AddVault_ReturnsSameServiceCollection()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder();
+        var vaultOptions = new VaultOptions { IsActivated = false };
+        var environment = "dev";
+
+        // Act
+        var result = services.AddVault(configuration, vaultOptions, environment);
+
+        // Assert
+        Assert.Same(services, result);
+    }
+}
