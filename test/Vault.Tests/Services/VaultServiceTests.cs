@@ -31,7 +31,7 @@ public class VaultServiceTests
         VaultOptions? options = null;
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() =>
+        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(() =>
             new VaultService(options!, this.logger));
         Assert.Equal(nameof(options), exception.ParamName);
     }
@@ -40,7 +40,7 @@ public class VaultServiceTests
     public void Constructor_WithNullLogger_ThrowsArgumentNullException()
     {
         // Arrange
-        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
         var options = new VaultOptions
         {
             IsActivated = true,
@@ -55,7 +55,7 @@ public class VaultServiceTests
         ILogger<VaultService>? logger = null;
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() =>
+        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(() =>
             new VaultService(options, logger!));
         Assert.Equal(nameof(logger), exception.ParamName);
     }
@@ -71,7 +71,7 @@ public class VaultServiceTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() =>
             new VaultService(options, this.logger));
         Assert.Contains("not activated", exception.Message);
         Assert.Contains("Vault:IsActivated", exception.Message);
@@ -81,7 +81,7 @@ public class VaultServiceTests
     public async Task GetSecretsAsync_WithEmptyEnvironment_ThrowsArgumentException()
     {
         // Arrange
-        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
         var options = new VaultOptions
         {
             IsActivated = true,
@@ -100,7 +100,7 @@ public class VaultServiceTests
             var service = new VaultService(options, this.logger);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
+            ArgumentException exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 service.GetSecretsAsync(string.Empty));
             Assert.Equal("environment", exception.ParamName);
             Assert.Contains("cannot be empty", exception.Message);
@@ -117,7 +117,7 @@ public class VaultServiceTests
     public async Task GetSecretValueAsync_WithEmptyEnvironment_ThrowsArgumentException()
     {
         // Arrange
-        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
         var options = new VaultOptions
         {
             IsActivated = true,
@@ -135,7 +135,7 @@ public class VaultServiceTests
             var service = new VaultService(options, this.logger);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
+            ArgumentException exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 service.GetSecretValueAsync(string.Empty, "key"));
             Assert.Equal("environment", exception.ParamName);
         }
@@ -149,7 +149,7 @@ public class VaultServiceTests
     public async Task GetSecretValueAsync_WithEmptyKey_ThrowsArgumentException()
     {
         // Arrange
-        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
         var options = new VaultOptions
         {
             IsActivated = true,
@@ -167,7 +167,7 @@ public class VaultServiceTests
             var service = new VaultService(options, this.logger);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
+            ArgumentException exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 service.GetSecretValueAsync("dev", string.Empty));
             Assert.Equal("key", exception.ParamName);
         }
@@ -181,7 +181,7 @@ public class VaultServiceTests
     public async Task GetNestedSecretValueAsync_WithEmptyEnvironment_ThrowsArgumentException()
     {
         // Arrange
-        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
         var options = new VaultOptions
         {
             IsActivated = true,
@@ -199,7 +199,7 @@ public class VaultServiceTests
             var service = new VaultService(options, this.logger);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
+            ArgumentException exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 service.GetNestedSecretValueAsync(string.Empty, "path"));
             Assert.Equal("environment", exception.ParamName);
         }
@@ -213,7 +213,7 @@ public class VaultServiceTests
     public async Task GetNestedSecretValueAsync_WithEmptyPath_ThrowsArgumentException()
     {
         // Arrange
-        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
         var options = new VaultOptions
         {
             IsActivated = true,
@@ -231,7 +231,7 @@ public class VaultServiceTests
             var service = new VaultService(options, this.logger);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
+            ArgumentException exception = await Assert.ThrowsAsync<ArgumentException>(() =>
                 service.GetNestedSecretValueAsync("dev", string.Empty));
             Assert.Equal("path", exception.ParamName);
         }

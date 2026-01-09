@@ -29,7 +29,7 @@ public class VaultExtensionTests
         var environment = "dev";
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() =>
+        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(() =>
             services!.AddVault(configuration, vaultOptions, environment));
         Assert.Equal(nameof(services), exception.ParamName);
     }
@@ -44,7 +44,7 @@ public class VaultExtensionTests
         var environment = "dev";
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() =>
+        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(() =>
             services.AddVault(configuration!, vaultOptions, environment));
         Assert.Equal(nameof(configuration), exception.ParamName);
     }
@@ -59,7 +59,7 @@ public class VaultExtensionTests
         var environment = "dev";
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentNullException>(() =>
+        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(() =>
             services.AddVault(configuration, vaultOptions!, environment));
         Assert.Equal(nameof(vaultOptions), exception.ParamName);
     }
@@ -74,7 +74,7 @@ public class VaultExtensionTests
         var environment = string.Empty;
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() =>
+        ArgumentException exception = Assert.Throws<ArgumentException>(() =>
             services.AddVault(configuration, vaultOptions, environment));
         Assert.Equal(nameof(environment), exception.ParamName);
         Assert.Contains("cannot be empty", exception.Message);
@@ -90,7 +90,7 @@ public class VaultExtensionTests
         var environment = "   ";
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() =>
+        ArgumentException exception = Assert.Throws<ArgumentException>(() =>
             services.AddVault(configuration, vaultOptions, environment));
         Assert.Equal(nameof(environment), exception.ParamName);
     }
@@ -110,15 +110,15 @@ public class VaultExtensionTests
 
         // Act
         services.AddVault(configuration, vaultOptions, environment);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Assert
-        var registeredOptions = serviceProvider.GetService<VaultOptions>();
+        VaultOptions? registeredOptions = serviceProvider.GetService<VaultOptions>();
         Assert.NotNull(registeredOptions);
         Assert.Same(vaultOptions, registeredOptions);
 
         // VaultService should not be registered
-        var vaultService = serviceProvider.GetService<IVaultService>();
+        IVaultService? vaultService = serviceProvider.GetService<IVaultService>();
         Assert.Null(vaultService);
     }
 
@@ -128,7 +128,7 @@ public class VaultExtensionTests
         // Arrange
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder();
-        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
         var vaultOptions = new VaultOptions
         {
             IsActivated = true,
@@ -144,10 +144,10 @@ public class VaultExtensionTests
 
         // Act
         services.AddVault(configuration, vaultOptions, environment);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Assert
-        var registeredOptions = serviceProvider.GetService<VaultOptions>();
+        VaultOptions? registeredOptions = serviceProvider.GetService<VaultOptions>();
         Assert.NotNull(registeredOptions);
         Assert.Same(vaultOptions, registeredOptions);
     }
@@ -185,7 +185,7 @@ public class VaultExtensionTests
         var environment = "dev";
 
         // Act
-        var result = services.AddVault(configuration, vaultOptions, environment);
+        IServiceCollection result = services.AddVault(configuration, vaultOptions, environment);
 
         // Assert
         Assert.Same(services, result);

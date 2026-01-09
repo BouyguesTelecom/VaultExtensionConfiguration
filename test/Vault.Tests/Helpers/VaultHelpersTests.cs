@@ -35,7 +35,7 @@ public class VaultHelpersTests
         };
 
         // Act
-        var result = options.GetConfiguration();
+        VaultDefaultConfiguration result = options.GetConfiguration();
 
         // Assert
         Assert.Same(config, result);
@@ -57,7 +57,7 @@ public class VaultHelpersTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<NotSupportedException>(() => options.CreateAuthMethod());
+        NotSupportedException exception = Assert.Throws<NotSupportedException>(() => options.CreateAuthMethod());
         Assert.Contains("None", exception.Message);
         Assert.Contains("not supported", exception.Message);
     }
@@ -79,7 +79,7 @@ public class VaultHelpersTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => options.CreateAuthMethod());
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => options.CreateAuthMethod());
         Assert.Contains("AuthMethodFactory", exception.Message);
         Assert.Contains("must be provided", exception.Message);
     }
@@ -88,7 +88,7 @@ public class VaultHelpersTests
     public void CreateAuthMethod_WithCustomTypeAndValidFactory_ReturnsAuthMethod()
     {
         // Arrange
-        var mockAuthMethod = Substitute.For<IAuthMethodInfo>();
+        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
         var options = new VaultOptions
         {
             IsActivated = true,
@@ -102,7 +102,7 @@ public class VaultHelpersTests
         };
 
         // Act
-        var result = options.CreateAuthMethod();
+        IAuthMethodInfo? result = options.CreateAuthMethod();
 
         // Assert
         Assert.Same(mockAuthMethod, result);
@@ -125,7 +125,7 @@ public class VaultHelpersTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => options.CreateAuthMethod());
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => options.CreateAuthMethod());
         Assert.Contains("Error creating custom authentication method", exception.Message);
         Assert.Contains("Factory error", exception.Message);
     }

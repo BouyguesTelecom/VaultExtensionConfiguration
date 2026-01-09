@@ -88,7 +88,7 @@ public class VaultConfigurationSourceTests
         var builder = new ConfigurationBuilder();
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => source.Build(builder));
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => source.Build(builder));
         Assert.Contains("environment must be specified", exception.Message);
     }
 
@@ -103,7 +103,7 @@ public class VaultConfigurationSourceTests
         var builder = new ConfigurationBuilder();
 
         // Act
-        var provider = source.Build(builder);
+        IConfigurationProvider provider = source.Build(builder);
 
         // Assert
         Assert.NotNull(provider);
@@ -121,7 +121,7 @@ public class VaultConfigurationSourceTests
         var builder = new ConfigurationBuilder();
 
         // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(() => source.Build(builder));
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => source.Build(builder));
         Assert.Contains("environment must be specified", exception.Message);
     }
 
@@ -139,7 +139,7 @@ public class VaultConfigurationSourceTests
         var builder = new ConfigurationBuilder();
 
         // Act
-        var provider = source.Build(builder);
+        IConfigurationProvider provider = source.Build(builder);
 
         // Assert
         Assert.NotNull(provider);

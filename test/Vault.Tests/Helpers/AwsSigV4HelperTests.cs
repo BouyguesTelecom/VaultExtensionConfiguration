@@ -30,7 +30,7 @@ public class AwsSigV4HelperTests
         var body = "Action=GetCallerIdentity&Version=2011-06-15";
 
         // Act
-        var result = AwsSigV4Helper.SignRequest(
+        Dictionary<string, string> result = AwsSigV4Helper.SignRequest(
             accessKey: accessKey,
             secretKey: secretKey,
             sessionToken: null,
@@ -80,7 +80,7 @@ public class AwsSigV4HelperTests
         var body = "Action=GetCallerIdentity&Version=2011-06-15";
 
         // Act
-        var result = AwsSigV4Helper.SignRequest(
+        Dictionary<string, string> result = AwsSigV4Helper.SignRequest(
             accessKey: accessKey,
             secretKey: secretKey,
             sessionToken: sessionToken,
@@ -114,7 +114,7 @@ public class AwsSigV4HelperTests
         var headers = new Dictionary<string, string>();
 
         // Act
-        var result = AwsSigV4Helper.SignRequest(
+        Dictionary<string, string> result = AwsSigV4Helper.SignRequest(
             accessKey: accessKey,
             secretKey: secretKey,
             sessionToken: null,
@@ -148,7 +148,7 @@ public class AwsSigV4HelperTests
         var body = "Action=GetCallerIdentity&Version=2011-06-15";
 
         // Act
-        var result = AwsSigV4Helper.SignRequest(
+        Dictionary<string, string> result = AwsSigV4Helper.SignRequest(
             accessKey: accessKey,
             secretKey: secretKey,
             sessionToken: null,
@@ -186,7 +186,7 @@ public class AwsSigV4HelperTests
         var body = "Action=GetCallerIdentity&Version=2011-06-15";
 
         // Act
-        var result = AwsSigV4Helper.SignRequest(
+        Dictionary<string, string> result = AwsSigV4Helper.SignRequest(
             accessKey: accessKey,
             secretKey: secretKey,
             sessionToken: null,
@@ -222,12 +222,12 @@ public class AwsSigV4HelperTests
         var body = "Action=GetCallerIdentity&Version=2011-06-15";
 
         // Act - wait a bit to ensure different timestamps
-        var result1 = AwsSigV4Helper.SignRequest(
+        Dictionary<string, string> result1 = AwsSigV4Helper.SignRequest(
             accessKey, secretKey, null, region, service, method, host, path, queryString, headers, body);
 
         Thread.Sleep(1100); // Wait to get different timestamp
 
-        var result2 = AwsSigV4Helper.SignRequest(
+        Dictionary<string, string> result2 = AwsSigV4Helper.SignRequest(
             accessKey, secretKey, null, region, service, method, host, path, queryString, headers, body);
 
         // Assert - signatures should differ due to timestamp
