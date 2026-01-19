@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Extensions.Configuration;
+using NSubstitute;
+using Vault.Abstractions;
 using Vault.Configuration;
 using Xunit;
 
@@ -78,22 +80,7 @@ public class VaultConfigurationSourceTests
     }
 
     [Fact]
-    public void Build_WithEmptyEnvironment_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var source = new VaultConfigurationSource
-        {
-            Environment = string.Empty,
-        };
-        var builder = new ConfigurationBuilder();
-
-        // Act & Assert
-        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => source.Build(builder));
-        Assert.Contains("environment must be specified", exception.Message);
-    }
-
-    [Fact]
-    public void Build_WithValidEnvironment_ReturnsProvider()
+    public void Build_WithoutVaultService_ThrowsInvalidOperationException()
     {
         // Arrange
         var source = new VaultConfigurationSource
@@ -102,47 +89,92 @@ public class VaultConfigurationSourceTests
         };
         var builder = new ConfigurationBuilder();
 
-        // Act
-        IConfigurationProvider provider = source.Build(builder);
-
-        // Assert
-        Assert.NotNull(provider);
-        Assert.IsType<VaultConfigurationProvider>(provider);
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => source.Build(builder));
+        Assert.Contains("VaultService must be set", exception.Message);
     }
 
     [Fact]
-    public void Build_WithWhitespaceEnvironment_ThrowsInvalidOperationException()
+    public void AddVaultConfiguration_WithEmptyEnvironment_ThrowsArgumentException()
     {
         // Arrange
-        var source = new VaultConfigurationSource
-        {
-            Environment = "   ",
-        };
+        var vaultService = Substitute.For<IVaultService>();
         var builder = new ConfigurationBuilder();
 
         // Act & Assert
-        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => source.Build(builder));
-        Assert.Contains("environment must be specified", exception.Message);
+        ArgumentException exception = Assert.Throws<ArgumentException>(() =>
+            builder.AddVaultConfiguration(string.Empty, vaultService));
+        Assert.Equal("environment", exception.ParamName);
     }
 
     [Fact]
-    public void Build_WithCustomReloadInterval_PreservesConfiguration()
+    public void AddVaultConfiguration_WithValidEnvironmentAndVaultService_ReturnsBuilder()
     {
         // Arrange
-        var source = new VaultConfigurationSource
-        {
-            Environment = "dev",
-            Optional = true,
-            ReloadOnChange = true,
-            ReloadIntervalSeconds = 600,
-        };
+        var vaultService = Substitute.For<IVaultService>();
+        vaultService.GetSecretsAsync("dev").Returns(new Dictionary<string, object>());
         var builder = new ConfigurationBuilder();
 
         // Act
-        IConfigurationProvider provider = source.Build(builder);
+        IConfigurationBuilder result = builder.AddVaultConfiguration("dev", vaultService);
 
         // Assert
-        Assert.NotNull(provider);
-        Assert.IsType<VaultConfigurationProvider>(provider);
+        Assert.Same(builder, result);
+    }
+
+    [Fact]
+    public void AddVaultConfiguration_WithWhitespaceEnvironment_ThrowsArgumentException()
+    {
+        // Arrange
+        var vaultService = Substitute.For<IVaultService>();
+        var builder = new ConfigurationBuilder();
+
+        // Act & Assert
+        ArgumentException exception = Assert.Throws<ArgumentException>(() =>
+            builder.AddVaultConfiguration("   ", vaultService));
+        Assert.Equal("environment", exception.ParamName);
+    }
+
+    [Fact]
+    public void AddVaultConfiguration_LoadsSecretsImmediately()
+    {
+        // Arrange
+        var vaultService = Substitute.For<IVaultService>();
+        var secrets = new Dictionary<string, object>
+        {
+            ["ConnectionStrings:Default"] = "Server=localhost;Database=Test",
+            ["AppSettings:ApiKey"] = "secret-key",
+        };
+        vaultService.GetSecretsAsync("dev").Returns(secrets);
+        var builder = new ConfigurationBuilder();
+
+        // Act
+        builder.AddVaultConfiguration("dev", vaultService);
+        IConfigurationRoot config = builder.Build();
+
+        // Assert
+        Assert.Equal("Server=localhost;Database=Test", config["ConnectionStrings:Default"]);
+        Assert.Equal("secret-key", config["AppSettings:ApiKey"]);
+    }
+
+    [Fact]
+    public void AddVaultConfiguration_WithConfigureSource_AppliesConfiguration()
+    {
+        // Arrange
+        var vaultService = Substitute.For<IVaultService>();
+        vaultService.GetSecretsAsync("prod").Returns(new Dictionary<string, object>());
+        var builder = new ConfigurationBuilder();
+
+        // Act
+        builder.AddVaultConfiguration("prod", vaultService, source =>
+        {
+            source.Optional = true;
+            source.ReloadOnChange = true;
+            source.ReloadIntervalSeconds = 600;
+        });
+        IConfigurationRoot config = builder.Build();
+
+        // Assert - configuration was built successfully
+        Assert.NotNull(config);
     }
 }

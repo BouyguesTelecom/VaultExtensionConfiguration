@@ -13,15 +13,17 @@ public class VaultConfigurationProvider
     : ConfigurationProvider, IDisposable
 {
     private readonly VaultConfigurationSource _source;
-    private readonly IVaultService? _vaultService;
+    private readonly IVaultService _vaultService;
     private readonly ILogger? _logger;
     private Timer? _reloadTimer;
     private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="VaultConfigurationProvider"/> class.
-    /// Main constructor used when VaultService is already available.
     /// </summary>
+    /// <param name="source">The configuration source.</param>
+    /// <param name="vaultService">The Vault service instance.</param>
+    /// <param name="logger">Optional logger for the provider.</param>
     public VaultConfigurationProvider(
         VaultConfigurationSource source,
         IVaultService vaultService,
@@ -30,22 +32,6 @@ public class VaultConfigurationProvider
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _vaultService = vaultService ?? throw new ArgumentNullException(nameof(vaultService));
         _logger = logger;
-
-        if (string.IsNullOrWhiteSpace(_source.Environment))
-        {
-            throw new InvalidOperationException(
-                "Vault environment must be specified (e.g., DEV, PROD)");
-        }
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="VaultConfigurationProvider"/> class.
-    /// Constructor for compatibility with IConfigurationSource.Build
-    /// VaultService will be injected later via SetVaultService.
-    /// </summary>
-    internal VaultConfigurationProvider(VaultConfigurationSource source)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
 
         if (string.IsNullOrWhiteSpace(_source.Environment))
         {
@@ -80,28 +66,6 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
-    /// Inject VaultService after creation (used by extension method).
-    /// </summary>
-    internal void SetVaultService(IVaultService vaultService, ILogger<VaultConfigurationProvider>? logger = null)
-    {
-        if (_vaultService != null)
-        {
-            throw new InvalidOperationException("VaultService already set");
-        }
-
-        // Use reflection to assign the readonly field
-        var field = typeof(VaultConfigurationProvider).GetField(
-            "_vaultService",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        field?.SetValue(this, vaultService);
-
-        var loggerField = typeof(VaultConfigurationProvider).GetField(
-            "_logger",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        loggerField?.SetValue(this, logger);
-    }
-
-    /// <summary>
     /// Convert an object value to string.
     /// </summary>
     private static string? ConvertValueToString(object? value)
@@ -120,35 +84,60 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
-    /// Check if a value is JSON.
+    /// Check if a value is JSON (object or array).
+    /// Handles both string values and JsonElement values.
     /// </summary>
-    private static bool IsJsonValue(object? value)
+    private static bool IsJsonValue(object? value, out string? jsonString)
     {
-        if (value is not string str)
+        jsonString = null;
+
+        if (value == null)
         {
             return false;
         }
 
-        str = str.Trim();
-        return (str.StartsWith("{") && str.EndsWith("}")) || (str.StartsWith("[") && str.EndsWith("]"));
+        // Handle JsonElement from VaultSharp
+        if (value is JsonElement jsonElement)
+        {
+            if (jsonElement.ValueKind == JsonValueKind.Object ||
+                jsonElement.ValueKind == JsonValueKind.Array)
+            {
+                jsonString = jsonElement.GetRawText();
+                return true;
+            }
+
+            if (jsonElement.ValueKind == JsonValueKind.String)
+            {
+                var str = jsonElement.GetString()?.Trim();
+                if (!string.IsNullOrEmpty(str) &&
+                    ((str.StartsWith("{") && str.EndsWith("}")) ||
+                     (str.StartsWith("[") && str.EndsWith("]"))))
+                {
+                    jsonString = str;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Handle string values
+        if (value is string strValue)
+        {
+            var trimmed = strValue.Trim();
+            if ((trimmed.StartsWith("{") && trimmed.EndsWith("}")) ||
+                (trimmed.StartsWith("[") && trimmed.EndsWith("]")))
+            {
+                jsonString = trimmed;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private async Task LoadAsync()
     {
-        if (_vaultService == null)
-        {
-            var errorMessage = "VaultService is not initialized. " +
-                "Make sure to call AddVault() before AddVaultConfiguration()";
-
-            if (_source.Optional)
-            {
-                _logger?.LogWarning(errorMessage);
-                return;
-            }
-
-            throw new InvalidOperationException(errorMessage);
-        }
-
         try
         {
             _logger?.LogInformation(
@@ -162,9 +151,9 @@ public class VaultConfigurationProvider
             foreach (var kvp in secrets)
             {
                 // If the value is JSON, flatten it
-                if (IsJsonValue(kvp.Value))
+                if (IsJsonValue(kvp.Value, out var jsonString))
                 {
-                    FlattenJsonValue(kvp.Key, kvp.Value, data);
+                    FlattenJsonValue(kvp.Key, jsonString, data);
                 }
                 else
                 {
@@ -229,11 +218,11 @@ public class VaultConfigurationProvider
     }
 
     /// <summary>
-    /// Flatten a JSON value into dotted keys with dot notation.
+    /// Flatten a JSON value into configuration keys.
     /// </summary>
-    private void FlattenJsonValue(string parentKey, object? value, Dictionary<string, string?> data)
+    private void FlattenJsonValue(string parentKey, string? jsonString, Dictionary<string, string?> data)
     {
-        if (value is not string jsonString)
+        if (string.IsNullOrEmpty(jsonString))
         {
             return;
         }
