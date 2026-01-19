@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Vault.Abstractions;
 using Vault.Helpers;
 using Vault.Options;
@@ -22,13 +23,13 @@ public class VaultService
     /// Initializes a new instance of the <see cref="VaultService"/> class.
     /// </summary>
     /// <param name="options">The Vault configuration options.</param>
-    /// <param name="logger">The logger instance.</param>
+    /// <param name="logger">The logger instance. If null, a NullLogger is used.</param>
     public VaultService(
         VaultOptions options,
-        ILogger<VaultService> logger)
+        ILogger<VaultService>? logger = null)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _logger = logger ?? NullLogger<VaultService>.Instance;
 
         if (!options.IsActivated)
         {

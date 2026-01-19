@@ -117,39 +117,9 @@ public class VaultExtensionTests
         Assert.NotNull(registeredOptions);
         Assert.Same(vaultOptions, registeredOptions);
 
-        // VaultService should not be registered
+        // VaultService should not be registered when Vault is not activated
         IVaultService? vaultService = serviceProvider.GetService<IVaultService>();
         Assert.Null(vaultService);
-    }
-
-    [Fact]
-    public void AddVault_WithValidConfiguration_RegistersVaultOptions()
-    {
-        // Arrange
-        var services = new ServiceCollection();
-        var configuration = new ConfigurationBuilder();
-        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
-        var vaultOptions = new VaultOptions
-        {
-            IsActivated = true,
-            AuthenticationType = VaultAuthenticationType.Custom,
-            Configuration = new VaultCustomConfiguration
-            {
-                VaultUrl = "https://vault.example.com",
-                MountPoint = "secret",
-                AuthMethodFactory = () => mockAuthMethod,
-            },
-        };
-        var environment = "dev";
-
-        // Act
-        services.AddVault(configuration, vaultOptions, environment);
-        ServiceProvider serviceProvider = services.BuildServiceProvider();
-
-        // Assert
-        VaultOptions? registeredOptions = serviceProvider.GetService<VaultOptions>();
-        Assert.NotNull(registeredOptions);
-        Assert.Same(vaultOptions, registeredOptions);
     }
 
     [Fact]

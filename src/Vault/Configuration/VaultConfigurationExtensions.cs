@@ -11,43 +11,9 @@ namespace Vault.Configuration;
 public static class VaultConfigurationExtensions
 {
     /// <summary>
-    /// Adds HashiCorp Vault as a configuration source.
-    /// Note: AddVault() must be called BEFORE this method to register VaultService.
-    /// </summary>
-    /// <param name="builder">The configuration builder.</param>
-    /// <param name="environment">The Vault environment to load (e.g., DEV, PROD).</param>
-    /// <param name="configureSource">Optional action to configure the source.</param>
-    /// <returns>The configuration builder for chaining.</returns>
-    public static IConfigurationBuilder AddVaultConfiguration(
-        this IConfigurationBuilder builder,
-        string environment,
-        Action<VaultConfigurationSource>? configureSource = null)
-    {
-        if (builder == null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
-
-        if (string.IsNullOrWhiteSpace(environment))
-        {
-            throw new ArgumentException(
-                "Environment cannot be empty",
-                nameof(environment));
-        }
-
-        var source = new VaultConfigurationSource
-        {
-            Environment = environment
-        };
-
-        configureSource?.Invoke(source);
-
-        return builder.Add(source);
-    }
-
-    /// <summary>
     /// Adds HashiCorp Vault as a configuration source with an existing VaultService.
-    /// Useful for tests or when VaultService is created manually.
+    /// Secrets are loaded immediately during Build() so they are available for
+    /// subsequent configuration such as Entity Framework connection strings.
     /// </summary>
     /// <param name="builder">The configuration builder.</param>
     /// <param name="environment">The Vault environment to load (e.g., DEV, PROD).</param>
@@ -79,79 +45,61 @@ public static class VaultConfigurationExtensions
 
         var source = new VaultConfigurationSource
         {
-            Environment = environment
+            Environment = environment,
+            VaultService = vaultService
         };
 
         configureSource?.Invoke(source);
 
-        var provider = new VaultConfigurationProvider(source, vaultService);
-        builder.Add(new VaultConfigurationSourceWrapper(source, provider));
-
-        return builder;
+        // The source will create the provider and load secrets immediately in Build()
+        return builder.Add(source);
     }
 
     /// <summary>
-    /// Inject VaultService into all existing VaultConfigurationProvider instances.
-    /// To be called after IConfiguration is built to initialize the providers.
+    /// Adds HashiCorp Vault as a configuration source with an existing VaultService and logger.
+    /// Secrets are loaded immediately during Build() so they are available for
+    /// subsequent configuration such as Entity Framework connection strings.
     /// </summary>
-    /// <param name="configuration">The built configuration.</param>
-    /// <param name="serviceProvider">The service provider containing VaultService.</param>
-    public static void InitializeVaultProviders(
-        this IConfiguration configuration,
-        IServiceProvider serviceProvider)
+    /// <param name="builder">The configuration builder.</param>
+    /// <param name="environment">The Vault environment to load (e.g., DEV, PROD).</param>
+    /// <param name="vaultService">VaultService instance to use.</param>
+    /// <param name="logger">Optional logger for the configuration provider.</param>
+    /// <param name="configureSource">Optional action to configure the source.</param>
+    /// <returns>The configuration builder for chaining.</returns>
+    public static IConfigurationBuilder AddVaultConfiguration(
+        this IConfigurationBuilder builder,
+        string environment,
+        IVaultService vaultService,
+        ILogger<VaultConfigurationProvider>? logger,
+        Action<VaultConfigurationSource>? configureSource = null)
     {
-        if (configuration == null)
+        if (builder == null)
         {
-            throw new ArgumentNullException(nameof(configuration));
+            throw new ArgumentNullException(nameof(builder));
         }
 
-        if (serviceProvider == null)
+        if (string.IsNullOrWhiteSpace(environment))
         {
-            throw new ArgumentNullException(nameof(serviceProvider));
+            throw new ArgumentException(
+                "Environment cannot be empty",
+                nameof(environment));
         }
 
-        if (configuration is not IConfigurationRoot configurationRoot)
-        {
-            return;
-        }
-
-        var vaultService = serviceProvider.GetService<IVaultService>();
         if (vaultService == null)
         {
-            return;
+            throw new ArgumentNullException(nameof(vaultService));
         }
 
-        var logger = serviceProvider.GetService<ILogger<VaultConfigurationProvider>>();
-
-        foreach (var provider in configurationRoot.Providers)
+        var source = new VaultConfigurationSource
         {
-            if (provider is VaultConfigurationProvider vaultProvider)
-            {
-                vaultProvider.SetVaultService(vaultService, logger);
-                vaultProvider.Load();
-            }
-        }
-    }
+            Environment = environment,
+            VaultService = vaultService,
+            Logger = logger
+        };
 
-    /// <summary>
-    /// Wrapper to allow manual provider injection.
-    /// </summary>
-    private class VaultConfigurationSourceWrapper : IConfigurationSource
-    {
-        private readonly VaultConfigurationSource _source;
-        private readonly VaultConfigurationProvider _provider;
+        configureSource?.Invoke(source);
 
-        public VaultConfigurationSourceWrapper(
-            VaultConfigurationSource source,
-            VaultConfigurationProvider provider)
-        {
-            _source = source;
-            _provider = provider;
-        }
-
-        public IConfigurationProvider Build(IConfigurationBuilder builder)
-        {
-            return _provider;
-        }
+        // The source will create the provider and load secrets immediately in Build()
+        return builder.Add(source);
     }
 }

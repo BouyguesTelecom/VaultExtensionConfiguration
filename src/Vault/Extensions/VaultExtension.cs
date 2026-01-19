@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Vault.Abstractions;
 using Vault.Configuration;
@@ -16,6 +15,8 @@ public static class VaultExtension
 {
     /// <summary>
     /// Fully configures Vault: adds configuration source and registers VaultService.
+    /// Secrets are loaded immediately during configuration build, making them available
+    /// for subsequent configuration such as Entity Framework connection strings.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="configuration">The application configuration.</param>
@@ -50,34 +51,6 @@ public static class VaultExtension
             throw new ArgumentException("Environment cannot be empty", nameof(environment));
         }
 
-        configuration.AddVaultConfiguration(environment, configureSource);
-        services.AddVaultService(vaultOptions);
-
-        return services;
-    }
-
-    /// <summary>
-    /// Initialize Vault providers after the application is built.
-    /// </summary>
-    /// <param name="app">The web application.</param>
-    /// <returns>The web application for chaining.</returns>
-    public static WebApplication UseVault(this WebApplication app)
-    {
-        if (app == null)
-        {
-            throw new ArgumentNullException(nameof(app));
-        }
-
-        app.Configuration.InitializeVaultProviders(app.Services);
-
-        return app;
-    }
-
-    /// <summary>
-    /// Register VaultService in the DI container with specified options.
-    /// </summary>
-    private static IServiceCollection AddVaultService(this IServiceCollection services, VaultOptions vaultOptions)
-    {
         // Register VaultOptions singleton
         services.AddSingleton(vaultOptions);
 
@@ -90,8 +63,14 @@ public static class VaultExtension
         // Validate VaultOptions configuration
         VaultOptionsValidator.Validate(vaultOptions);
 
-        // Register VaultService as singleton
-        services.AddSingleton<IVaultService, VaultService>();
+        // Create VaultService immediately so secrets can be loaded during configuration build
+        var vaultService = new VaultService(vaultOptions);
+
+        // Add Vault configuration with immediate loading
+        configuration.AddVaultConfiguration(environment, vaultService, configureSource);
+
+        // Register the same VaultService instance in DI for later use
+        services.AddSingleton<IVaultService>(vaultService);
 
         return services;
     }

@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Vault.Abstractions;
 
 namespace Vault.Configuration;
 
@@ -30,10 +32,33 @@ public class VaultConfigurationSource
     public int ReloadIntervalSeconds { get; set; } = 300; // 5 minutes by default
 
     /// <summary>
-    /// Build the configuration provider.
+    /// Gets or sets the Vault service instance to use for loading secrets.
     /// </summary>
+    internal IVaultService? VaultService { get; set; }
+
+    /// <summary>
+    /// Gets or sets the logger for the configuration provider.
+    /// </summary>
+    internal ILogger<VaultConfigurationProvider>? Logger { get; set; }
+
+    /// <summary>
+    /// Build the configuration provider.
+    /// Secrets are loaded immediately to make them available for subsequent
+    /// configuration (e.g., connection strings for Entity Framework).
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when VaultService is not set.</exception>
     public IConfigurationProvider Build(IConfigurationBuilder builder)
     {
-        return new VaultConfigurationProvider(this);
+        if (VaultService == null)
+        {
+            throw new InvalidOperationException(
+                "VaultService must be set. Use AddVault() or AddVaultConfiguration() with a VaultService instance.");
+        }
+
+        // Create provider with VaultService and load immediately
+        var provider = new VaultConfigurationProvider(this, VaultService, Logger);
+        provider.Load();
+
+        return provider;
     }
 }

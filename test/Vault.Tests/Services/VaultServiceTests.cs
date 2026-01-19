@@ -37,10 +37,9 @@ public class VaultServiceTests
     }
 
     [Fact]
-    public void Constructor_WithNullLogger_ThrowsArgumentNullException()
+    public void Constructor_WithNullLogger_UsesNullLogger()
     {
         // Arrange
-        IAuthMethodInfo mockAuthMethod = Substitute.For<IAuthMethodInfo>();
         var options = new VaultOptions
         {
             IsActivated = true,
@@ -49,15 +48,15 @@ public class VaultServiceTests
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "secret",
-                AuthMethodFactory = () => mockAuthMethod,
+                AuthMethodFactory = () => new VaultSharp.V1.AuthMethods.Token.TokenAuthMethodInfo("test-token"),
             },
         };
-        ILogger<VaultService>? logger = null;
 
-        // Act & Assert
-        ArgumentNullException exception = Assert.Throws<ArgumentNullException>(() =>
-            new VaultService(options, logger!));
-        Assert.Equal(nameof(logger), exception.ParamName);
+        // Act - should not throw, logger is optional
+        var service = new VaultService(options, null);
+
+        // Assert
+        Assert.NotNull(service);
     }
 
     [Fact]
