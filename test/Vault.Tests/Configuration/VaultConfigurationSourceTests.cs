@@ -98,7 +98,7 @@ public class VaultConfigurationSourceTests
     public void AddVaultConfiguration_WithEmptyEnvironment_ThrowsArgumentException()
     {
         // Arrange
-        var vaultService = Substitute.For<IVaultService>();
+        IVaultService vaultService = Substitute.For<IVaultService>();
         var builder = new ConfigurationBuilder();
 
         // Act & Assert
@@ -111,7 +111,7 @@ public class VaultConfigurationSourceTests
     public void AddVaultConfiguration_WithValidEnvironmentAndVaultService_ReturnsBuilder()
     {
         // Arrange
-        var vaultService = Substitute.For<IVaultService>();
+        IVaultService vaultService = Substitute.For<IVaultService>();
         vaultService.GetSecretsAsync("dev").Returns(new Dictionary<string, object>());
         var builder = new ConfigurationBuilder();
 
@@ -126,7 +126,7 @@ public class VaultConfigurationSourceTests
     public void AddVaultConfiguration_WithWhitespaceEnvironment_ThrowsArgumentException()
     {
         // Arrange
-        var vaultService = Substitute.For<IVaultService>();
+        IVaultService vaultService = Substitute.For<IVaultService>();
         var builder = new ConfigurationBuilder();
 
         // Act & Assert
@@ -139,7 +139,7 @@ public class VaultConfigurationSourceTests
     public void AddVaultConfiguration_LoadsSecretsImmediately()
     {
         // Arrange
-        var vaultService = Substitute.For<IVaultService>();
+        IVaultService vaultService = Substitute.For<IVaultService>();
         var secrets = new Dictionary<string, object>
         {
             ["ConnectionStrings:Default"] = "Server=localhost;Database=Test",
@@ -161,7 +161,7 @@ public class VaultConfigurationSourceTests
     public void AddVaultConfiguration_WithConfigureSource_AppliesConfiguration()
     {
         // Arrange
-        var vaultService = Substitute.For<IVaultService>();
+        IVaultService vaultService = Substitute.For<IVaultService>();
         vaultService.GetSecretsAsync("prod").Returns(new Dictionary<string, object>());
         var builder = new ConfigurationBuilder();
 
