@@ -13,7 +13,7 @@
 - ⚙️ **Seamless integration** with `Microsoft.Extensions.Configuration` and `IOptions<T>`
 - 🔄 **Immediate secret loading** into configuration after build
 - ✅ **Fluent validation** for configuration options
-- 🏗️ **Full dependency injection** support
+- 🏗️ **Full dependency injection** support with `IOptions`, `IOptionsSnapshot`, and `IOptionsMonitor`
 - 🔌 **Direct Vault access** via `IVaultService`
 
 ## Installation
@@ -109,7 +109,7 @@ public class DatabaseSettings
 // In Program.cs
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("Database"));
 
-// Use in your services
+// Use in your services with IOptions (singleton-like behavior)
 public class DatabaseService
 {
     private readonly DatabaseSettings _settings;
@@ -123,6 +123,41 @@ public class DatabaseService
     {
         var connectionString = $"{_settings.ConnectionString};Password={_settings.Password}";
         // Use connection string
+    }
+}
+
+// Use in your scoped services with IOptionsSnapshot (refreshed per scope/request)
+public class ScopedDatabaseService
+{
+    private readonly DatabaseSettings _settings;
+
+    public ScopedDatabaseService(IOptionsSnapshot<DatabaseSettings> optionsSnapshot)
+    {
+        _settings = optionsSnapshot.Value;
+    }
+
+    public void Connect()
+    {
+        var connectionString = $"{_settings.ConnectionString};Password={_settings.Password}";
+        // Use connection string - fresh value for each HTTP request
+    }
+}
+
+// Use IOptionsMonitor for real-time change notifications
+public class MonitoredDatabaseService
+{
+    private readonly IDisposable? _changeListener;
+
+    public MonitoredDatabaseService(IOptionsMonitor<DatabaseSettings> optionsMonitor)
+    {
+        // Get current value
+        var currentSettings = optionsMonitor.CurrentValue;
+
+        // Listen for changes
+        _changeListener = optionsMonitor.OnChange((newSettings, name) =>
+        {
+            Console.WriteLine("Database settings changed!");
+        });
     }
 }
 ```
@@ -339,6 +374,10 @@ app.Run();
 4. **SSL certificates**: Never set `IgnoreSslErrors = true` in production
 5. **Token security**: Store Vault tokens securely and rotate them regularly
 6. **IVaultService usage**: Use `IVaultService` for dynamic secret retrieval, `IConfiguration`/`IOptions` for startup configuration
+7. **Choose the right Options pattern**:
+   - **IOptions<T>**: Use for singleton services or when you need consistent values throughout the application lifetime
+   - **IOptionsSnapshot<T>**: Use for scoped services (e.g., per HTTP request) to get fresh values each scope
+   - **IOptionsMonitor<T>**: Use when you need to react to configuration changes at runtime
 
 ## Troubleshooting
 

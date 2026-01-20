@@ -3,6 +3,7 @@
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using Vault.Abstractions;
 using Vault.Enum;
@@ -159,5 +160,74 @@ public class VaultExtensionTests
 
         // Assert
         Assert.Same(services, result);
+    }
+
+    [Fact]
+    public void AddVault_RegistersIOptionsSnapshot()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder();
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = false,
+            AuthenticationType = VaultAuthenticationType.None,
+        };
+        var environment = "dev";
+
+        // Act
+        services.AddVault(configuration, vaultOptions, environment);
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        // Assert
+        IOptionsSnapshot<VaultOptions>? optionsSnapshot = serviceProvider.GetService<IOptionsSnapshot<VaultOptions>>();
+        Assert.NotNull(optionsSnapshot);
+        Assert.Same(vaultOptions, optionsSnapshot.Value);
+    }
+
+    [Fact]
+    public void AddVault_RegistersIOptions()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder();
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = false,
+            AuthenticationType = VaultAuthenticationType.None,
+        };
+        var environment = "dev";
+
+        // Act
+        services.AddVault(configuration, vaultOptions, environment);
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        // Assert
+        IOptions<VaultOptions>? options = serviceProvider.GetService<IOptions<VaultOptions>>();
+        Assert.NotNull(options);
+        Assert.Same(vaultOptions, options.Value);
+    }
+
+    [Fact]
+    public void AddVault_RegistersIOptionsMonitor()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder();
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = false,
+            AuthenticationType = VaultAuthenticationType.None,
+        };
+        var environment = "dev";
+
+        // Act
+        services.AddVault(configuration, vaultOptions, environment);
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        // Assert
+        IOptionsMonitor<VaultOptions>? optionsMonitor = serviceProvider.GetService<IOptionsMonitor<VaultOptions>>();
+        Assert.NotNull(optionsMonitor);
+        Assert.Same(vaultOptions, optionsMonitor.CurrentValue);
     }
 }
