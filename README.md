@@ -11,7 +11,7 @@
 
 - 🔐 **Multiple authentication methods**: Local token, AWS IAM, or custom authentication
 - ⚙️ **Seamless integration** with `Microsoft.Extensions.Configuration` and `IOptions<T>`
-- 🔄 **Automatic secret loading** into configuration at startup
+- 🔄 **Immediate secret loading** into configuration after build
 - ✅ **Fluent validation** for configuration options
 - 🏗️ **Full dependency injection** support
 - 🔌 **Direct Vault access** via `IVaultService`
@@ -39,7 +39,7 @@ using Vault.Enum;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Register VaultService and configure Vault
+// Register VaultService and load secrets immediately into configuration
 builder.Services.AddVault(
     builder.Configuration,
     new VaultOptions
@@ -56,8 +56,7 @@ builder.Services.AddVault(
 
 var app = builder.Build();
 
-// Initialize Vault providers
-app.UseVault();
+// Secrets are already loaded and available - no additional initialization required!
 
 app.Run();
 ```
@@ -289,7 +288,7 @@ using Vault.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configure Vault
+// 1. Configure Vault - secrets are loaded immediately into configuration
 builder.Services.AddVault(
     builder.Configuration,
     new VaultOptions
@@ -318,8 +317,7 @@ builder.Services.AddScoped<MyService>();
 
 var app = builder.Build();
 
-// Initialize Vault providers
-app.UseVault();
+// No additional initialization required - secrets are already available!
 
 app.MapGet("/config", (IConfiguration config) =>
     new { apiKey = config["AppSettings:ApiKey"] });
@@ -346,11 +344,14 @@ app.Run();
 
 ### Secrets not loading
 
-Ensure you call `app.UseVault()` after building the application:
+Ensure the `AddVault` method is called with `builder.Configuration` (the configuration builder, not the built configuration):
 
 ```csharp
-var app = builder.Build();
-app.UseVault(); // Required to initialize Vault providers
+// Correct - pass the configuration builder
+builder.Services.AddVault(
+    builder.Configuration,  // IConfigurationBuilder
+    vaultOptions,
+    environment: "production");
 ```
 
 ### Authentication errors
