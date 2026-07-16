@@ -7,6 +7,7 @@ using Vault.Helpers;
 using Vault.Options;
 using Vault.Options.Configuration;
 using VaultSharp.V1.AuthMethods;
+using VaultSharp.V1.AuthMethods.Kubernetes;
 using VaultSharp.V1.AuthMethods.Token;
 using Xunit;
 
@@ -128,5 +129,98 @@ public class VaultHelpersTests
         InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => options.CreateAuthMethod());
         Assert.Contains("Error creating custom authentication method", exception.Message);
         Assert.Contains("Factory error", exception.Message);
+    }
+
+    [Fact]
+    public void CreateAuthMethod_WithKubernetesTypeAndExplicitRoleName_ReturnsAuthMethodWithExplicitRole()
+    {
+        // Arrange
+        var tokenFilePath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(tokenFilePath, "fake-jwt-token");
+            var options = new VaultOptions
+            {
+                IsActivated = true,
+                AuthenticationType = VaultAuthenticationType.Kubernetes,
+                Configuration = new VaultKubernetesConfiguration
+                {
+                    VaultUrl = "https://vault.example.com",
+                    MountPoint = "Point-Break",
+                    KubernetesAuthMountPoint = "ocp-1",
+                    KubernetesRoleName = "explicit-role",
+                    ServiceAccountTokenPath = tokenFilePath,
+                },
+            };
+
+            // Act
+            IAuthMethodInfo? result = options.CreateAuthMethod();
+
+            // Assert
+            KubernetesAuthMethodInfo kubernetesAuthMethod = Assert.IsType<KubernetesAuthMethodInfo>(result);
+            Assert.Equal("ocp-1", kubernetesAuthMethod.MountPoint);
+            Assert.Equal("explicit-role", kubernetesAuthMethod.RoleName);
+            Assert.Equal("fake-jwt-token", kubernetesAuthMethod.JWT);
+        }
+        finally
+        {
+            File.Delete(tokenFilePath);
+        }
+    }
+
+    [Fact]
+    public void CreateAuthMethod_WithKubernetesTypeAndNoExplicitRoleName_BuildsRoleFromMountPointAndEnvironment()
+    {
+        // Arrange
+        var tokenFilePath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(tokenFilePath, "fake-jwt-token");
+            var options = new VaultOptions
+            {
+                IsActivated = true,
+                AuthenticationType = VaultAuthenticationType.Kubernetes,
+                Configuration = new VaultKubernetesConfiguration
+                {
+                    VaultUrl = "https://vault.example.com",
+                    MountPoint = "point-break",
+                    Environment = "dev",
+                    KubernetesAuthMountPoint = "ocp-1",
+                    ServiceAccountTokenPath = tokenFilePath,
+                },
+            };
+
+            // Act
+            IAuthMethodInfo? result = options.CreateAuthMethod();
+
+            // Assert
+            KubernetesAuthMethodInfo kubernetesAuthMethod = Assert.IsType<KubernetesAuthMethodInfo>(result);
+            Assert.Equal("point-break-dev-role", kubernetesAuthMethod.RoleName);
+        }
+        finally
+        {
+            File.Delete(tokenFilePath);
+        }
+    }
+
+    [Fact]
+    public void CreateAuthMethod_WithKubernetesTypeAndMissingTokenFile_ThrowsFileNotFoundException()
+    {
+        // Arrange
+        var options = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Kubernetes,
+            Configuration = new VaultKubernetesConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "point-break",
+                Environment = "dev",
+                ServiceAccountTokenPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()),
+            },
+        };
+
+        // Act & Assert
+        Assert.Throws<FileNotFoundException>(() => options.CreateAuthMethod());
     }
 }

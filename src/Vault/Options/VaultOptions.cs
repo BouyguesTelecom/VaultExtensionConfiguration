@@ -6,7 +6,7 @@ namespace Vault.Options;
 
 /// <summary>
 /// Configuration options for the Vault service
-/// Allows configuring different authentication types (Local, AWS_IAM or Custom).
+/// Allows configuring different authentication types (Local, AWS_IAM, Kubernetes or Custom).
 /// </summary>
 public class VaultOptions
 {
@@ -16,7 +16,7 @@ public class VaultOptions
     public bool IsActivated { get; set; } = true;
 
     /// <summary>
-    /// Authentication type (Local, AWS_IAM or Custom).
+    /// Authentication type (Local, AWS_IAM, Kubernetes or Custom).
     /// </summary>
     public VaultAuthenticationType AuthenticationType { get; set; } = VaultAuthenticationType.None;
 
@@ -25,6 +25,7 @@ public class VaultOptions
     /// The actual instance can be:
     /// - VaultLocalConfiguration if AuthenticationType = Local
     /// - VaultAwsIAMConfiguration if AuthenticationType = AWS_IAM
+    /// - VaultKubernetesConfiguration if AuthenticationType = Kubernetes
     /// - VaultCustomConfiguration if AuthenticationType = Custom
     /// - VaultDefaultConfiguration by default.
     /// </summary>

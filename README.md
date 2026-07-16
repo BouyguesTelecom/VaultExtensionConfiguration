@@ -249,9 +249,34 @@ var vaultOptions = new VaultOptions
 builder.Services.AddVault(builder.Configuration, vaultOptions, environment: "production");
 ```
 
+### Kubernetes Authentication
+
+Best for workloads running inside a Kubernetes cluster, using the pod's service account JWT:
+
+```csharp
+var vaultOptions = new VaultOptions
+{
+    AuthenticationType = VaultAuthenticationType.Kubernetes,
+    Configuration = new VaultKubernetesConfiguration
+    {
+        VaultUrl = "https://vault.example.com",
+        MountPoint = "my-team",
+        Environment = "dev",
+        KubernetesAuthMountPoint = "ocp-1", // Kubernetes auth backend mount in Vault
+        KubernetesRoleName = null, // Optional, defaults to "{MountPoint}-{Environment}-role"
+        ServiceAccountTokenPath = "/var/run/secrets/kubernetes.io/serviceaccount/token" // Default path
+    }
+};
+
+builder.Services.AddVault(builder.Configuration, vaultOptions, environment: "dev");
+```
+
+> Vault role names are case-sensitive. If your role was created in lowercase (e.g. `my-team-dev-role`),
+> make sure `MountPoint`/`Environment` are already lowercase, or set `KubernetesRoleName` explicitly.
+
 ### Custom Authentication
 
-For AppRole, LDAP, UserPass, Kubernetes, etc.:
+For AppRole, LDAP, UserPass, etc.:
 
 ```csharp
 using VaultSharp.V1.AuthMethods.AppRole;
@@ -300,6 +325,18 @@ builder.Services.AddVault(builder.Configuration, vaultOptions, environment: "pro
 | `Environment` | `string` | Environment name (used for default role naming) |
 | `AwsAuthMountPoint` | `string` | AWS auth method mount point (default: `"aws"`) |
 | `AwsIamRoleName` | `string` | AWS IAM role name (optional, defaults to `{MountPoint}-{Environment}-role`) |
+| `IgnoreSslErrors` | `bool` | Ignore SSL certificate errors |
+
+### VaultKubernetesConfiguration
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `VaultUrl` | `string` | Vault server URL |
+| `MountPoint` | `string` | Secret engine (KV2) mount point |
+| `Environment` | `string` | Environment name (used for default role naming) |
+| `KubernetesAuthMountPoint` | `string` | Kubernetes auth method mount point in Vault (required, e.g. `"ocp-1"` or `"kubeshift/my-cluster"`, depends on the target cluster) |
+| `KubernetesRoleName` | `string` | Vault role name (optional, defaults to `{MountPoint}-{Environment}-role`) |
+| `ServiceAccountTokenPath` | `string` | Path to the service account JWT token file (default: standard Kubernetes projected token path) |
 | `IgnoreSslErrors` | `bool` | Ignore SSL certificate errors |
 
 ### IVaultService Methods
