@@ -52,6 +52,10 @@ public static class VaultOptionsValidator
                 ValidateAwsIamConfiguration(config);
                 break;
 
+            case VaultAuthenticationType.Kubernetes:
+                ValidateKubernetesConfiguration(config);
+                break;
+
             case VaultAuthenticationType.Custom:
                 ValidateCustomConfiguration(config);
                 break;
@@ -114,8 +118,44 @@ public static class VaultOptionsValidator
                 "Create a VaultAwsIAMConfiguration instance and assign it to VaultOptions.Configuration.");
         }
 
-        // Optional: Add specific AWS IAM validation if needed
-        // For example, validate that either AwsIamRoleName is set OR both MountPoint and Environment are set
+        if (string.IsNullOrWhiteSpace(awsConfig.AwsIamRoleName) && string.IsNullOrWhiteSpace(awsConfig.Environment))
+        {
+            throw new InvalidOperationException(
+                "Vault:Configuration:AwsIamRoleName or Vault:Configuration:Environment configuration is missing for AWS_IAM authentication. " +
+                "Either set AwsIamRoleName explicitly, or set Environment so the role name can be deduced as '{MountPoint}-{Environment}-role'.");
+        }
+    }
+
+    /// <summary>
+    /// Validates configuration for Kubernetes authentication.
+    /// </summary>
+    private static void ValidateKubernetesConfiguration(VaultDefaultConfiguration config)
+    {
+        if (config is not VaultKubernetesConfiguration kubernetesConfig)
+        {
+            throw new InvalidOperationException(
+                "Configuration must be of type VaultKubernetesConfiguration for Kubernetes authentication. " +
+                "Create a VaultKubernetesConfiguration instance and assign it to VaultOptions.Configuration.");
+        }
+
+        if (string.IsNullOrWhiteSpace(kubernetesConfig.KubernetesAuthMountPoint))
+        {
+            throw new InvalidOperationException(
+                "Vault:Configuration:KubernetesAuthMountPoint configuration is missing for Kubernetes authentication.");
+        }
+
+        if (string.IsNullOrWhiteSpace(kubernetesConfig.ServiceAccountTokenPath))
+        {
+            throw new InvalidOperationException(
+                "Vault:Configuration:ServiceAccountTokenPath configuration is missing for Kubernetes authentication.");
+        }
+
+        if (string.IsNullOrWhiteSpace(kubernetesConfig.KubernetesRoleName) && string.IsNullOrWhiteSpace(kubernetesConfig.Environment))
+        {
+            throw new InvalidOperationException(
+                "Vault:Configuration:KubernetesRoleName or Vault:Configuration:Environment configuration is missing for Kubernetes authentication. " +
+                "Either set KubernetesRoleName explicitly, or set Environment so the role name can be deduced as '{MountPoint}-{Environment}-role'.");
+        }
     }
 
     /// <summary>

@@ -4,6 +4,7 @@ using Vault.Options.Configuration;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods;
 using VaultSharp.V1.AuthMethods.AWS;
+using VaultSharp.V1.AuthMethods.Kubernetes;
 using VaultSharp.V1.AuthMethods.Token;
 
 namespace Vault.Helpers;
@@ -30,6 +31,7 @@ public static class VaultHelpers
         {
             VaultAuthenticationType.Local => ((VaultLocalConfiguration)options.Configuration).CreateLocalAuthMethod(),
             VaultAuthenticationType.AWS_IAM => ((VaultAwsIAMConfiguration)options.Configuration).CreateAwsIamAuthMethod(),
+            VaultAuthenticationType.Kubernetes => ((VaultKubernetesConfiguration)options.Configuration).CreateKubernetesAuthMethod(),
             VaultAuthenticationType.Custom => ((VaultCustomConfiguration)options.Configuration).CreateCustomAuthMethod(),
             _ => throw new NotSupportedException($"Authentication type '{options.AuthenticationType}' is not supported")
         };
@@ -132,6 +134,18 @@ public static class VaultHelpers
                 "- The bound_iam_principal_arn matches your EC2 role",
                 authEx);
         }
+    }
+
+    private static IAuthMethodInfo CreateKubernetesAuthMethod(this VaultKubernetesConfiguration config)
+    {
+        // Determine the role name
+        string roleName = !string.IsNullOrWhiteSpace(config.KubernetesRoleName)
+            ? config.KubernetesRoleName
+            : $"{config.MountPoint}-{config.Environment}-role";
+
+        var jwt = ReadTokenFromFile(config.ServiceAccountTokenPath);
+
+        return new KubernetesAuthMethodInfo(config.KubernetesAuthMountPoint, roleName, jwt);
     }
 
     private static IAuthMethodInfo CreateCustomAuthMethod(this VaultCustomConfiguration config)

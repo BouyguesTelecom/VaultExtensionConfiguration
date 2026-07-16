@@ -23,6 +23,14 @@ public enum VaultAuthenticationType
     AWS_IAM,
 
     /// <summary>
+    /// Automatic authentication via Kubernetes
+    /// Uses the JWT token of the pod's service account (projected or default token file) to authenticate
+    /// against a Kubernetes auth backend mounted in Vault.
+    /// Requires Vault role configuration bound to the appropriate service account name/namespace.
+    /// </summary>
+    Kubernetes,
+
+    /// <summary>
     /// Custom authentication via a custom IAuthMethodInfo implementation
     /// Allows providing your own authentication strategy.
     /// </summary>

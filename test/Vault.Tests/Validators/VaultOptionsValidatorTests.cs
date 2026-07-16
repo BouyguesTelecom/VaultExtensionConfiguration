@@ -305,11 +305,165 @@ public class VaultOptionsValidatorTests
             {
                 VaultUrl = "https://vault.example.com",
                 MountPoint = "secret",
+                AwsIamRoleName = "my-role",
             },
         };
 
         // Act & Assert - should not throw
         VaultOptionsValidator.Validate(vaultOptions);
+    }
+
+    [Fact]
+    public void Validate_WhenAwsIamAuthWithMissingRoleNameAndEnvironment_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.AWS_IAM,
+            Configuration = new VaultAwsIAMConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+            },
+        };
+
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("AwsIamRoleName", exception.Message);
+        Assert.Contains("Environment", exception.Message);
+    }
+
+    [Fact]
+    public void Validate_WhenKubernetesAuthWithValidConfiguration_DoesNotThrow()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Kubernetes,
+            Configuration = new VaultKubernetesConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "Point-Break",
+                Environment = "dev",
+                KubernetesAuthMountPoint = "ocp-1",
+            },
+        };
+
+        // Act & Assert - should not throw
+        VaultOptionsValidator.Validate(vaultOptions);
+    }
+
+    [Fact]
+    public void Validate_WhenKubernetesAuthWithWrongConfigurationType_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Kubernetes,
+            Configuration = new VaultDefaultConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+            },
+        };
+
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("VaultKubernetesConfiguration", exception.Message);
+        Assert.Contains("Kubernetes authentication", exception.Message);
+    }
+
+    [Fact]
+    public void Validate_WhenKubernetesAuthWithEmptyAuthMountPoint_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Kubernetes,
+            Configuration = new VaultKubernetesConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "Point-Break",
+                Environment = "dev",
+                KubernetesAuthMountPoint = string.Empty,
+            },
+        };
+
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("KubernetesAuthMountPoint", exception.Message);
+        Assert.Contains("missing", exception.Message);
+    }
+
+    [Fact]
+    public void Validate_WhenKubernetesAuthWithEmptyServiceAccountTokenPath_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Kubernetes,
+            Configuration = new VaultKubernetesConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "Point-Break",
+                Environment = "dev",
+                KubernetesAuthMountPoint = "ocp-1",
+                ServiceAccountTokenPath = string.Empty,
+            },
+        };
+
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("ServiceAccountTokenPath", exception.Message);
+        Assert.Contains("missing", exception.Message);
+    }
+
+    [Fact]
+    public void Validate_WhenKubernetesAuthWithMinimalConfiguration_DoesNotThrow()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Kubernetes,
+            Configuration = new VaultKubernetesConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+                KubernetesAuthMountPoint = "ocp-1",
+                KubernetesRoleName = "my-role",
+            },
+        };
+
+        // Act & Assert - should not throw
+        VaultOptionsValidator.Validate(vaultOptions);
+    }
+
+    [Fact]
+    public void Validate_WhenKubernetesAuthWithMissingRoleNameAndEnvironment_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var vaultOptions = new VaultOptions
+        {
+            IsActivated = true,
+            AuthenticationType = VaultAuthenticationType.Kubernetes,
+            Configuration = new VaultKubernetesConfiguration
+            {
+                VaultUrl = "https://vault.example.com",
+                MountPoint = "secret",
+                KubernetesAuthMountPoint = "ocp-1",
+            },
+        };
+
+        // Act & Assert
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => VaultOptionsValidator.Validate(vaultOptions));
+        Assert.Contains("KubernetesRoleName", exception.Message);
+        Assert.Contains("Environment", exception.Message);
     }
 
     [Fact]
